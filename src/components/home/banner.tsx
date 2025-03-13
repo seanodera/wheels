@@ -62,7 +62,7 @@ function CarouselItem({ featured }: { featured: CarAuction }) {
             <div className="col-span-2 row-span-2 relative">
                 <img
                     src={featured.images[0] || "/placeholder.jpg"}
-                    className="w-full h-full object-fill rounded-lg aspect-video"
+                    className="w-full h-full object-cover rounded-lg aspect-video"
                     alt={`${featured.brand} ${featured.model}`}
                 />
                 <div className="absolute top-0 left-0 right-0 p-4 flex justify-between items-center">
