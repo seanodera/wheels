@@ -126,7 +126,7 @@ export default function Auctions() {
             </div>
 
             {/* Listings Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-x-4 gap-y-8 py-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-8 py-4">
                 {filteredListings.map((listing) => (
                     <AuctionItem key={listing.id} listing={listing} />
                 ))}

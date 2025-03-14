@@ -43,7 +43,7 @@ export default function AuctionItem({ listing }: { listing: CarAuction }) {
         <div>
             <div className="aspect-video relative">
                 <img src={listing.images[0] || "/placeholder.jpg"} alt="" className="w-full h-full object-cover rounded-lg" />
-                <div className="absolute bottom-1 left-1 bg-dark flex gap-2 p-2 rounded-md">
+                <div className="absolute bottom-1 left-1 bg-dark flex gap-2 px-2 py-1 rounded-md">
                     <span className="flex items-center gap-1">
                         <Text className={'leading-none my-0'} type="secondary">
                             <ClockCircleOutlined />
