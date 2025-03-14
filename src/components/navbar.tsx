@@ -29,7 +29,7 @@ export default function Navbar() {
     };
 
     return (
-        <div className={'flex w-screen px-16 py-3 justify-between shadow-lg'}>
+        <div className={'flex w-screen px-16 py-3 justify-between shadow-lg '}>
             <div className={'flex gap-6 items-center'}>
                 <div className={'flex gap-2 items-center'}>
                     <Avatar shape={"square"} size={'large'} src={<LogoComponent className={'text-primary'}/>} />

@@ -1,12 +1,29 @@
 import { faker } from "@faker-js/faker";
 
+
+function shuffle<T>(array: T[]): T[] {
+    let currentIndex = array.length;
+
+    // While there remain elements to shuffle...
+    while (currentIndex !== 0) {
+        // Pick a remaining element...
+        const randomIndex = Math.floor(Math.random() * currentIndex);
+        currentIndex--;
+
+        // Swap the elements
+        [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+    }
+
+    return array;
+}
+
 export function generateCarAuction(id: number) {
     const vehicle = faker.vehicle;
     return {
         id,
-        images: Array.from({ length: 12 }, () => faker.image.urlPicsumPhotos({ grayscale: false })),
+        images: shuffle(Array.from({ length: 9 }, (_,index) => `/images/vehicle-${index + 1}.jpg`)),
         name: "Luxury Sports Car",
-        currentBid: faker.number.int({ min: 10000, max: 100000 }),
+        currentBid: faker.number.int({ min: 100000, max: 5000000 }),
         startingBid: faker.number.int({ min: 100, max: 5000 }),
         ending: faker.date.soon({ days: 7 }).toISOString(),
         year: faker.number.int({ min: 2015, max: 2024 }),

@@ -8,9 +8,9 @@ import {ConfigProvider, theme} from 'antd'
 
 const themeConfig = {
     "token": {
-        "colorPrimary": "#FF3D00",
-        "colorSecondary": "#006874",
-        "colorDark": "#262626"
+        "colorPrimary": "#00e5ff",
+        "colorSecondary": "#ffd700",
+        "colorDark": "#001315"
     },
     "algorithm": theme.darkAlgorithm
 };

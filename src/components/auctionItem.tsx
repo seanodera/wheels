@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { ClockCircleOutlined } from "@ant-design/icons";
 import { Typography } from "antd";
 import { CarAuction } from "@/types.ts";
+import {toMoneyFormat} from "@/utils.ts";
 
 const {Title, Text } = Typography;
 
@@ -51,7 +52,7 @@ export default function AuctionItem({ listing }: { listing: CarAuction }) {
                     </span>
                     <span>
                         <Text className={'leading-none my-0'} type="secondary">Bid</Text>
-                        <Text className="leading-none my-0 font-medium"> ${listing.currentBid}</Text>
+                        <Text className="leading-none my-0 font-medium"> KSH {toMoneyFormat(listing.currentBid, true)}</Text>
                     </span>
                 </div>
             </div>
