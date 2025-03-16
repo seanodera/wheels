@@ -3,6 +3,7 @@ import { ClockCircleOutlined } from "@ant-design/icons";
 import { Typography } from "antd";
 import { CarAuction } from "@/types.ts";
 import {toMoneyFormat} from "@/utils.ts";
+import {Link} from "react-router-dom";
 
 const {Title, Text } = Typography;
 
@@ -40,7 +41,7 @@ export default function AuctionItem({ listing }: { listing: CarAuction }) {
     }, [listing.ending]);
 
     return (
-        <div>
+        <Link to={`/auction/${listing.id}`} className={'block text-current'}>
             <div className="aspect-video relative">
                 <img src={listing.images[0] || "/placeholder.jpg"} alt="" className="w-full h-full object-cover rounded-lg" />
                 <div className="absolute bottom-1 left-1 bg-dark flex gap-2 px-2 py-1 rounded-md">
@@ -61,6 +62,6 @@ export default function AuctionItem({ listing }: { listing: CarAuction }) {
                 <Text className={'leading-none block'} >{listing.millage} KM · {listing.engine} · {listing.transmission} . {listing.drivetrain}</Text>
                 <Text className={'leading-none block'} type={'secondary'}>{listing.tags.join(', ')}</Text>
             </div>
-        </div>
+        </Link>
     );
 }

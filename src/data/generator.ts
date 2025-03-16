@@ -1,31 +1,71 @@
 import { faker } from "@faker-js/faker";
-
+import {Bid, CarAuction, CommentItem} from "@/types.ts";
 
 function shuffle<T>(array: T[]): T[] {
     let currentIndex = array.length;
-
-    // While there remain elements to shuffle...
     while (currentIndex !== 0) {
-        // Pick a remaining element...
         const randomIndex = Math.floor(Math.random() * currentIndex);
         currentIndex--;
-
-        // Swap the elements
         [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
     }
-
     return array;
 }
 
-export function generateCarAuction(id: number) {
+// Generate bids that increase over time, starting from `startingBid`
+function generateBids(startingBid: number, currentBid: number, auctionEnd: Date): Bid[] {
+    const bidCount = faker.number.int({ min: 5, max: 15 }); // Random number of bids
+    let bidAmount = startingBid;
+    const timeStep = Math.floor((auctionEnd.getTime() - Date.now()) / bidCount); // Time increment per bid
+    let lastBidTime = Date.now() - timeStep; // Start from past
+
+    return Array.from({ length: bidCount }, (_, i) => {
+        const userId = faker.number.int({ min: 2, max: 100 });
+        bidAmount += faker.number.int({ min: 500, max: 5000 }); // Increment bid amount
+        lastBidTime += faker.number.int({ min: 10 * 60 * 1000, max: 6 * 60 * 60 * 1000 }); // Random time gaps
+
+        return {
+            id: i,
+            userId,
+            user: {
+                id: userId,
+                username: faker.internet.username(),
+                email: faker.internet.email(),
+            },
+            amount: Math.min(bidAmount, currentBid), // Ensure we don’t exceed current bid
+            timestamp: new Date(lastBidTime).toISOString(),
+        };
+    });
+}
+
+// Generate comments
+function generateComments(): CommentItem[] {
+    return Array.from({ length: 7 }, (_, i) => ({
+        id: i,
+        userId: faker.number.int({ min: 2, max: 100 }),
+        user: {
+            id: faker.number.int({ min: 2, max: 100 }),
+            username: faker.internet.username(),
+            email: faker.internet.email(),
+        },
+        text: faker.lorem.sentence(),
+        timestamp: faker.date.recent().toISOString(),
+    }));
+}
+
+// Generate car auction
+export function generateCarAuction(id: number): CarAuction {
     const vehicle = faker.vehicle;
+    const startingBid = faker.number.int({ min: 700000, max: 4000000 });
+    const currentBid = faker.number.int({ min: startingBid + 50000, max: startingBid + 5000000 });
+    const auctionEnd = faker.date.soon({ days: 7 });
+
     return {
         id,
-        images: shuffle(Array.from({ length: 9 }, (_,index) => `/images/vehicle-${index + 1}.jpg`)),
+        images: shuffle(Array.from({ length: 9 }, (_, index) => `/images/vehicle-${index + 1}.jpg`)),
         name: "Luxury Sports Car",
-        currentBid: faker.number.int({ min: 100000, max: 5000000 }),
-        startingBid: faker.number.int({ min: 100, max: 5000 }),
-        ending: faker.date.soon({ days: 7 }).toISOString(),
+        currentBid,
+        startingBid,
+        ending: auctionEnd.toISOString(),
         year: faker.number.int({ min: 2015, max: 2024 }),
         brand: vehicle.manufacturer(),
         model: vehicle.model(),
@@ -39,19 +79,24 @@ export function generateCarAuction(id: number) {
         titleStatus: faker.helpers.arrayElement(["Clean", "Salvage", "Rebuilt"]),
         color: faker.color.human(),
         interior: `${faker.color.human()} Leather`,
-        bids: [],
-        comments: [],
+        bids: generateBids(startingBid, currentBid, auctionEnd),
+        comments: generateComments(),
         description: {
-            general: "A well-maintained luxury sports car.",
-            highlights: "Low mileage, premium interior.",
-            equipment: "BOSE sound system, adaptive cruise control.",
-            modifications: "Aftermarket exhaust system.",
-            knownFlaws: "Minor scratch on rear bumper.",
-            serviceHistory: "Full dealership service records.",
-            ownershipHistory: "Single owner.",
-            sellerNotes: "Car is in excellent condition, ready for a new owner."
+            general: faker.lorem.paragraphs(2),
+            highlights: faker.lorem.paragraphs(2),
+            equipment: faker.lorem.paragraphs(2),
+            modifications: faker.lorem.paragraphs(2),
+            knownFlaws: faker.lorem.paragraphs(2),
+            serviceHistory: faker.lorem.paragraphs(2),
+            ownershipHistory: faker.lorem.paragraphs(2),
+            sellerNotes: faker.lorem.paragraphs(2),
         },
         video: [],
-        tags: ["Luxury", "Sports", "Low Mileage"]
+        tags: ["Luxury", "Sports", "Low Mileage"],
+        seller: {
+            id: faker.number.int({ min: 2, max: 8 }),
+            username: faker.internet.username(),
+            email: faker.internet.email(),
+        },
     };
 }

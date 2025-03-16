@@ -19,13 +19,14 @@ export interface CarAuction {
     color: string;
     interior: string;
     bids: Bid[];
-    comments: Comment[];
+    comments: CommentItem[];
     description: CarDescription;
     video: string[]; // Assuming video URLs
     tags: string[];
+    seller: User;
 }
 
-interface CarDescription {
+export interface CarDescription {
     general: string;
     highlights: string;
     equipment: string;
@@ -36,14 +37,26 @@ interface CarDescription {
     sellerNotes: string;
 }
 
-interface Bid {
+export interface Bid {
+    id: number;
     userId: number;
+    user: User;
     amount: number;
     timestamp: string; // ISO format
 }
 
-interface Comment {
-    userId: number;
+export interface CommentItem {
+    id: number;
+    user: User;
     text: string;
-    timestamp: string; // ISO format
+    timestamp: string;
+    replies?: CommentItem[];
+
+}
+
+export interface User {
+    id: number;
+    username: string;
+    email: string;
+    profile?: string;
 }

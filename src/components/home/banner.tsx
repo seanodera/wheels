@@ -80,7 +80,7 @@ function CarouselItem({ featured }: { featured: CarAuction }) {
                                     {featured.year} {featured.brand} {featured.model}
                                 </Title>
                                 <Text type={'secondary'} className="leading-none !my-0">
-                                    {featured.millage} miles · {featured.engine}
+                                    {featured.millage} KM · {featured.engine}
                                 </Text>
                             </div>
                         </div>
