@@ -9,7 +9,7 @@ const {Title,Text,Paragraph} = Typography;
 export default function SingleDealer() {
     const [dealer] = useState(generateDealers(0))
     const [listings] = useState(Array.from({length: dealer.listing_count}, (_,index) => generateCarListing(index,dealer)))
-    return (<div className={'px-16 space-y-8'}>
+    return (<div className={'px-4 lg:px-16 space-y-8'}>
         <div>
             <div className={'flex justify-between mb-4 mt-8'}>
                 <div>
@@ -22,7 +22,7 @@ export default function SingleDealer() {
                 {dealer.images.map((image, index) => <img key={index} src={image} className={'w-full mb-4 object-cover object-center rounded-xl aspect-[20/7]'} alt={image}/>)}
             </CustomCarousel>
         </div>
-        <div className={'grid grid-cols-4'}>
+        <div className={'grid grid-cols-1 md:grid-cols-4'}>
             <div className={'col-span-3'}>
                 <Title>Description</Title>
                 <Paragraph>{dealer.description}</Paragraph>
@@ -42,7 +42,7 @@ export default function SingleDealer() {
         </div>
         <div className={'py-8 space-y-8'}>
             <Title level={2} className={'leading-none !my-0'}>Listings</Title>
-            <div className={'grid grid-cols-4 gap-8 mt-4'}>
+            <div className={'grid grid-cols-2 md:grid-cols-4 gap-8 mt-4'}>
                 {listings.map((listing, index) => <ListingComponent listing={listing} key={index}/>)}
             </div>
         </div>
