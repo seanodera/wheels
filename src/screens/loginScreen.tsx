@@ -9,13 +9,13 @@ export default function LoginScreen() {
         console.log('Received values:', values);
     };
 
-    return <div className={'flex flex-col justify-between items-center px-8 py-2 h-screen w-screen'}>
+    return <div className={'flex flex-col justify-between items-center px-8 py-2 h-screen w-screen bg-dark-950'}>
         <Link to={'/'} className={'w-full flex items-center justify-start'}>
             <div className={"flex text-primary items-center gap-2"}>
                 <Avatar shape={"square"} size={"large"} src={<LogoComponent className={'text-primary'}/>}
                         className={" text-primary"}/>
                 <Title level={4} className={"leading-none my-0"}>
-                    ChatSync
+                    Wheela
                 </Title>
             </div>
         </Link>
@@ -59,7 +59,7 @@ export default function LoginScreen() {
                     </Button>
                 </Form.Item>
                 <Form.Item className={'flex justify-center text-center'}>
-                    <Text className={'text-center'}>New To Chain Sync? <Link className={'text-primary hover:underline'} to={'/sign-up'}>Create an account</Link></Text>
+                    <Text className={'text-center'}>New To Wheela? <Link className={'text-primary hover:underline'} to={'/sign-up'}>Create an account</Link></Text>
                 </Form.Item>
             </Form>
         </div>

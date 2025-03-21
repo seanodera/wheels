@@ -1,39 +1,50 @@
 import {Avatar, Form, Typography, Input, Button} from "antd";
 import LogoComponent from "../assets/logoComponent.tsx";
-import {Link} from "react-router-dom";
+import {Link, useNavigate} from "react-router-dom";
+import {useAppDispatch} from "@/hooks.ts";
+import {asyncSignUp} from "@/features/authenticationSlice.ts";
+import {useState} from "react";
 
 const {Title, Text} = Typography;
 
 export default function SignUpScreen() {
-    const onFinish = (values: { firstName: string; lastName: string; email: string; password: string; companyName: string }) => {
+    const dispatch = useAppDispatch();
+    const [loading, setLoading] = useState(false);
+    const navigate = useNavigate();
+    const onFinish = async (values: { firstName: string; lastName: string; email: string; password: string; username: string }) => {
+        setLoading(true);
         console.log('Received values:', values);
+        await dispatch(asyncSignUp(values))
+        navigate('/')
+        setLoading(false);
     };
-    return <div className={'flex flex-col justify-between items-center px-8 py-2 h-screen w-screen'}>
+    return <div className={'flex flex-col justify-between items-center px-8 py-2 h-screen w-screen bg-dark-950'}>
         <div className={'w-full flex items-center justify-start'}>
             <Link to={'/'} className={"flex text-primary items-center gap-2"}>
                 <Avatar shape={"square"} size={"large"} src={<LogoComponent className={'text-primary'}/>}
                         className={" text-primary"}/>
                 <Title level={4} className={"leading-none my-0"}>
-                    ChatSync
+                    Wheela
                 </Title>
             </Link>
         </div>
 
         <div className={'max-w-md w-full'}>
             <Title>Sign Up</Title>
-            <Text>Create your account</Text>
             <Form
                 name="sign-up"
                 onFinish={onFinish}
                 layout="vertical"
                 className="mt-4 space-y-4"
                 size={'large'}
+                disabled={loading}
             >
                 <div className={'grid grid-cols-2 gap-4'}>
                     <Form.Item
                         name="firstName"
                         label="First Name"
                         rules={[{ required: true, message: 'Please input your first name!' }]}
+
                     >
                         <Input placeholder="Enter your first name" />
                     </Form.Item>
@@ -47,11 +58,11 @@ export default function SignUpScreen() {
                     </Form.Item>
                 </div>
                 <Form.Item
-                    name="companyName"
-                    label="Company Name"
-                    rules={[{ required: true, message: 'Please input your company name!' }]}
+                    name="username"
+                    label="Username"
+                    rules={[{ required: true, message: 'Please input your username!' }]}
                 >
-                    <Input placeholder="Enter your company name" />
+                    <Input placeholder="Enter your user name" />
                 </Form.Item>
                 <Form.Item
                     name="email"
@@ -80,12 +91,12 @@ export default function SignUpScreen() {
 
 
                 <Form.Item>
-                    <Button type="primary" htmlType="submit" className="w-full">
+                    <Button loading={loading} type="primary" htmlType="submit" className="w-full">
                         Sign Up
                     </Button>
                 </Form.Item>
                 <Form.Item className={'flex justify-center text-center'}>
-                    <Text className={'text-center'}>Already have an account? <Link className={'text-primary hover:underline'} to={'/login'}>Log in</Link></Text>
+                    <Text className={'text-center'}>Already have an account? <Link className={'  !text-primary hover:!underline hover:!text-primary-600'} to={'/login'}>Log in</Link></Text>
                 </Form.Item>
             </Form>
         </div>

@@ -2,13 +2,13 @@ import { useState } from "react";
 import {  Avatar, Button, Input, List } from "antd";
 import { Comment } from '@ant-design/compatible';
 import {ArrowDownOutlined, ArrowUpOutlined, UserOutlined} from "@ant-design/icons";
-import {CarAuction, CommentItem} from "@/types.ts";
+import {CarAuction, CarItem, CommentItem} from "@/types.ts";
 
 const { TextArea } = Input;
 
 
 
-export default function CommentsComponent({ listing }: { listing: CarAuction }) {
+export default function CommentsComponent({ listing }: { listing: CarAuction|CarItem }) {
     const [comments, setComments] = useState<CommentItem[]>(listing.comments);
     const [newComment, setNewComment] = useState("");
     const [replyingTo, setReplyingTo] = useState<number | null>(null);

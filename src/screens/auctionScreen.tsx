@@ -1,6 +1,6 @@
 import {useParams} from "react-router-dom";
 import {useEffect, useMemo, useState} from "react";
-import {CarAuction} from "@/types.ts";
+import {CarAuction, CarItem} from "@/types.ts";
 import {generateCarAuction} from "@/data/generator.ts";
 import {Avatar, Button, Divider, InputNumber, Typography} from "antd";
 import { startCase } from "lodash";
@@ -71,7 +71,7 @@ export default function AuctionScreen() {
 
     return (
         <div className="py-4 px-4 lg:px-16 text-current">
-            <div className={'flex justify-between items-center w-full pb-4'}>
+            <div className={'flex flex-col md:flex-row justify-between items-start md:items-center w-full pb-4 gap-4'}>
                 <div>
                     <Title className={'leading-none !my-0'}
                            level={3}>{listing.year} {listing.brand} {listing.model}</Title>
@@ -83,7 +83,7 @@ export default function AuctionScreen() {
                     <Button icon={<SendOutlined/>} size={'large'} color={'default'} variant={'outlined'}>Share</Button>
                 </div>
             </div>
-            <div className="grid grid-cols-5 grid-rows-4 gap-2">
+            <div className="grid grid-cols-3 lg:grid-cols-5 grid-rows-4 gap-2">
                 <div className="col-span-3 row-span-4 relative">
                     {/* Main Image */}
                     <img
@@ -104,17 +104,17 @@ export default function AuctionScreen() {
                 <div className={'w-full h-full object-cover rounded-lg aspect-video bg-cover'}
                      style={{backgroundImage: `url("${listing.images[ 9 ]}")`}}>
                     <div className={'w-full h-full flex flex-col justify-center items-center rounded-lg bg-dark/70'}>
-                        <Title level={4}>{listing.images.length - 8} More Images</Title>
+                        <Title level={5}>{listing.images.length - 8} More Images</Title>
                         <Button className={'aspect-square'} type={'text'} variant={'outlined'} ghost
                                 icon={<PlusOutlined className={'text-xl'}/>} shape={'round'} size={'large'}/>
                     </div>
                 </div>
             </div>
-            <div className={'grid grid-cols-5 gap-8 py-8'}>
-                <div className={'col-span-3 space-y-8'}>
+            <div className={'grid grid-cols-1 lg:grid-cols-5 gap-8 py-8 '}>
+                <div className={'lg:col-span-3 space-y-8'}>
                     <div className={'bg-dark-400/30 rounded-lg'}>
                         <div className={'p-8'}>
-                            <div className={' grid grid-cols-4'}>
+                            <div className={'grid grid-cols-2 lg:grid-cols-4 gap-4'}>
                                 <div>
                                     <Title className={'leading-none !my-0 '} type={'secondary'}
                                            level={5}><ClockCircleOutlined/> Time Left</Title>
@@ -136,7 +136,7 @@ export default function AuctionScreen() {
                                     <Title className={'leading-none !my-0'} level={5}>{listing.comments.length}</Title>
                                 </div>
                             </div>
-                            <div className={'flex justify-between gap-4 py-4'}>
+                            <div className={'flex flex-col lg:flex-row justify-between gap-4 py-4'}>
                                 <div>
                                     <div className={'flex gap-2 items-center mb-4'}><Title
                                         className={'leading-none !my-0'}
@@ -166,7 +166,7 @@ export default function AuctionScreen() {
                                 </div>
                             </div>
                         </div>
-                        <div className="bg-dark-400 rounded-b-lg p-8 flex justify-between gap-2 items-center">
+                        <div className="bg-dark-400 rounded-b-lg p-8 flex lg:flex-row flex-col justify-between gap-2 items-center">
                             <div className={'flex gap-2 items-center'}>
                                 <InputNumber
                                     min={listing.currentBid + 50000}
@@ -175,12 +175,12 @@ export default function AuctionScreen() {
                                     placeholder={'Enter Bid'}
                                     variant="outlined"
                                     size="large"
-                                    className="text-lg !w-sm"
+                                    className="text-lg !max-w-sm !w-full"
                                     prefix={'KSH'}
                                     formatter={(value) => toMoneyFormat(value || 0)}
                                     onChange={(e) => setMyBid(e || listing.currentBid + 50000)}
                                 />
-                                <Button type="primary" ghost size="large" className="text-lg">
+                                <Button type="primary"  size="large" className="text-lg block">
                                     Place Bid
                                 </Button>
                             </div>
@@ -227,8 +227,14 @@ export default function AuctionScreen() {
                 </div>
                 <div className={'col-span-2'}>
                     <Title className={'!my-4'} level={4}>Auctions Ending Soon</Title>
-                    <div className={'grid grid-cols-2 gap-8'}>
-                        {listings.slice(0,8).map((listing) => (
+                    <div className={'grid grid-cols-1 md:grid-cols-2 gap-8 mb-8'}>
+                        {listings.sort((a, b) => new Date(a.ending).getTime() - new Date(b.ending).getTime()).slice(0,8).map((listing) => (
+                            <AuctionItem key={listing.id} listing={listing}/>
+                        ))}
+                    </div>
+                    <Title className={'!my-4'} level={4}>New Listing</Title>
+                    <div className={'grid grid-cols-1 md:grid-cols-2 gap-8'}>
+                        {listings.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()).slice(0,8).map((listing) => (
                             <AuctionItem key={listing.id} listing={listing}/>
                         ))}
                     </div>
@@ -243,7 +249,7 @@ export default function AuctionScreen() {
 
 
 
-export function AuctionDescription({ listing }: { listing: CarAuction }) {
+export function AuctionDescription({ listing }: { listing: CarAuction | CarItem }) {
     const { description } = listing;
 
     return (

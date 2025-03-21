@@ -4,6 +4,8 @@ import './index.css'
 import App from './App'
 import { BrowserRouter } from 'react-router-dom'
 import {ConfigProvider, theme} from 'antd'
+import {store} from "@/store.ts";
+import {Provider} from "react-redux";
 
 
 const themeConfig = {
@@ -18,9 +20,11 @@ const themeConfig = {
 ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
         <BrowserRouter>
-            <ConfigProvider theme={themeConfig}>
-                <App />
-            </ConfigProvider>
+            <Provider store={store}>
+                <ConfigProvider theme={themeConfig}>
+                    <App />
+                </ConfigProvider>
+            </Provider>
         </BrowserRouter>
     </React.StrictMode>,
 )
