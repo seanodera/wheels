@@ -168,14 +168,14 @@ export interface Profile {
 // Interfaces for related objects
 
 
-interface AuctionBid {
+export interface AuctionBid {
     id: number;
     car: string;
     bidAmount: number;
     status: "pending" | "won" | "lost";
 }
 
-interface Transaction {
+export interface Transaction {
     id: number;
     type: "purchase" | "bid-payment" | "withdrawal" | "deposit";
     amount: number;
@@ -183,7 +183,7 @@ interface Transaction {
     status: "completed" | "pending" | "failed";
 }
 
-interface PaymentMethod {
+export interface PaymentMethod {
     type: "M-Pesa" | "Credit Card" | "Bank Transfer";
     number?: string;  // For M-Pesa
     last4?: string;  // For Credit Card
