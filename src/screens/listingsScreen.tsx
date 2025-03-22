@@ -14,14 +14,14 @@ export default function ListingsScreen(){
 
     return <div className={'space-y-8 pb-8'}>
         <ListingBanner/>
-        <CustomCarousel title={'Popular Listings'} description={'Everybody is looking at them!'} items={itemsToShow}>
+        <CustomCarousel className={'px-4 lg:px-16'} title={'Popular Listings'} description={'Everybody is looking at them!'} items={itemsToShow}>
             {popularListings.map((item,index) =>
                 <div className={`px-4 text-dark ${index === 0 ? "pl-0" : `${index % itemsToShow === 0 || index === popularListings.length - 1  ? "pr-0" : ""}`} `}>
                     {isCarAuction(item) ? <AuctionItem listing={item}/> : <ListingComponent listing={item}/>}
                 </div>
             )}
         </CustomCarousel>
-        <CustomCarousel title={'Newly Listed'} description={'Get them fresh'} items={itemsToShow}>
+        <CustomCarousel className={'px-4 lg:px-16'} title={'Newly Listed'} description={'Get them fresh'} items={itemsToShow}>
             {newListings.map((item,index) =>
                 <div className={`px-4 text-dark ${index === 0 ? "pl-0" : `${index % itemsToShow === 0 || index === newListings.length - 1  ? "pr-0" : ""}`} `}>
                     {isCarAuction(item) ? <AuctionItem listing={item}/> : <ListingComponent listing={item}/>}
