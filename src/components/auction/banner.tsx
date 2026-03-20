@@ -1,10 +1,12 @@
-import {generateCarAuction} from "@/data/generator.ts";
+
 import CustomCarousel from "@/components/customCarousel.tsx";
 import CarouselItem from "@/components/common/carouselItem.tsx";
+import {useAppSelector} from "@/store/hooks.ts";
 
 
 export default function AuctionBanner() {
-    const featured = Array.from({length: 9}, (_, id) => generateCarAuction(id));
+    const {endingSoon, auctions} = useAppSelector((state) => state.auction);
+    const featured = (endingSoon.length ? endingSoon : auctions).slice(0, 9);
 
     return (
         <div className="px-4 lg:px-16 w-screen pt-4">

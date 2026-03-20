@@ -1,6 +1,6 @@
 import {ReactNode} from "react";
-import {Link} from "react-router-dom";
-import {CarAuction} from "@/types.ts";
+import {Link} from "react-router";
+import {CarAuction} from "@/types";
 
 
 export function CustomButton({className = "", children, to = '#'}: {
@@ -31,5 +31,5 @@ export function HighlightBackground({className = "", children}: { className?: st
 
 export function isCarAuction (item: any): item is CarAuction {
     return "ending" in item
-};
+}
 

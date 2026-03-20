@@ -1,8 +1,8 @@
 
-import {Link} from "react-router-dom";
-import {toMoneyFormat} from "@/utils.ts";
+import {Link} from "react-router";
+import {toMoneyFormat} from "@/utils";
 import {Typography} from "antd";
-import {CarItem} from "@/types.ts";
+import {CarItem} from "@/types";
 
 const {Title, Text } = Typography;
 export default function ListingComponent({listing}: { listing: CarItem }) {
@@ -19,7 +19,7 @@ export default function ListingComponent({listing}: { listing: CarItem }) {
             </div>
             <div>
                 <Title className={'leading-none'} level={5}>{listing.year} {listing.brand} {listing.model}</Title>
-                <Text className={'leading-none block'} >{listing.millage} KM · {listing.engine} · {listing.transmission} . {listing.drivetrain}</Text>
+                <Text className={'leading-none block'} >{listing.mileage} KM · {listing.engine} · {listing.transmission} . {listing.drivetrain}</Text>
                 <Text className={'leading-none block'} type={'secondary'}>{listing.tags.join(', ')}</Text>
             </div>
         </Link>

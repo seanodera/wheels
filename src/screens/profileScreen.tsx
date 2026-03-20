@@ -1,18 +1,17 @@
 import {Tabs, Typography, Card, Avatar, Button, Empty} from "antd";
 import {useEffect, useState} from "react";
-import {useLocation, useNavigate} from "react-router-dom";
-import {useAppDispatch, useAppSelector} from "@/hooks.ts";
+import {useLocation, useNavigate} from "react-router";
+import {useAppDispatch, useAppSelector} from "@/store";
 import {formatDate} from "date-fns";
 import {UserOutlined} from "@ant-design/icons";
 import ListingComponent from "@/components/listingComponent.tsx";
 import {isCarAuction} from "@/components/common.tsx";
-import {CarItem} from "@/types.ts";
+import {CarItem} from "@/types";
 import AuctionItem from "@/components/auctionItem.tsx";
 import {
-    asyncFetchActiveListings,
-    asyncFetchArchivedListings, asyncFetchCompletedAuctions, asyncFetchUserAuctions,
+asyncFetchCompletedAuctions, asyncFetchUserAuctions,
     asyncFetchWishlist
-} from "@/features/authenticationSlice.ts";
+} from "@/store/reducers/authenticationSlice.ts";
 
 const {Title, Text} = Typography;
 
@@ -34,9 +33,7 @@ export default function ProfileScreen() {
     };
 
     const tabItems = [
-        {key: "active-listings", label: "Active Listings", children: <ActiveListings/>},
         {key: "saved-listings", label: "Saved Listings", children: <SavedListings/>},
-        {key: "archived-listings", label: "Archived Listings", children: <ArchivedListings/>},
         {key: "saved-auctions", label: "Saved Auctions", children: <SavedAuctions/>},
         {key: "your-auctions", label: "Your Auctions", children: <YourAuctions/>},
         {key: "completed-auctions", label: "Completed Auctions", children: <CompletedAuctions/>},
@@ -66,8 +63,8 @@ export default function ProfileScreen() {
                                 <Text className={'block'} type={'secondary'}>First Name</Text></div>
                             <div><Title className={' leading-none !my-0'} level={5}>{user.lastName}</Title> <Text
                                 className={'block'} type={'secondary'}>Last Name</Text></div>
-                            <div><Title className={' leading-none !my-0'} level={5}>{user.username}</Title> <Text
-                                className={'block'} type={'secondary'}>Username</Text></div>
+                            {/*<div><Title className={' leading-none !my-0'} level={5}>{user.username}</Title> <Text*/}
+                            {/*    className={'block'} type={'secondary'}>Username</Text></div>*/}
                             <div><Title className={' leading-none !my-0 block'}
                                         level={5}>{user.email}</Title><Text className={'block'}
                                                                                      type={'secondary'}>Email</Text>
@@ -86,22 +83,7 @@ export default function ProfileScreen() {
     );
 }
 
-// Sections for different tabs
-export function ActiveListings() {
-    const listings = useAppSelector(state => state.authentication.listings);
-    const dispatch = useAppDispatch();
-    useEffect(() => {
-        if (!listings){
-            dispatch(asyncFetchActiveListings())
-        }
-    }, [dispatch, listings]);
-    if (!listings){
-        return <Empty/>
-    }
-    return <div className={'grid grid-cols-5 gap-8'}>
-        {listings.map((listing, index) => <ListingComponent listing={listing} key={index} />)}
-    </div>;
-}
+
 
 export function SavedListings() {
     const listings = useAppSelector(state => state.authentication.wishlist);
@@ -119,21 +101,6 @@ export function SavedListings() {
     </div>;
 }
 
-export function ArchivedListings() {
-    const listings = useAppSelector(state => state.authentication.archivedListings);
-    const dispatch = useAppDispatch();
-    useEffect(() => {
-        if (!listings){
-            dispatch(asyncFetchArchivedListings())
-        }
-    }, [dispatch, listings]);
-    if (!listings){
-        return <Empty/>
-    }
-    return <div className={'grid grid-cols-5 gap-8'}>
-        {listings.map((listing, index) => <ListingComponent listing={listing} key={index} />)}
-    </div>;
-}
 
 export function SavedAuctions() {
     const listings = useAppSelector(state => state.authentication.wishlist);

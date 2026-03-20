@@ -1,6 +1,6 @@
 import { Avatar, Button, Typography } from "antd";
 import LogoComponent from "@/assets/logoComponent.tsx";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router";
 
 const { Title,Text } = Typography;
 

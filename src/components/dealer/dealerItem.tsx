@@ -1,7 +1,7 @@
-import {Dealer} from "@/types.ts";
+import {Dealer} from "@/types";
 import {Button, Typography} from "antd";
 import {MoreOutlined} from "@ant-design/icons";
-import {Link} from "react-router-dom";
+import {Link} from "react-router";
 
 const {Title, Text} = Typography;
 export function DealerItem({dealer, className = '', square}: {dealer: Dealer, className?: string, square?: boolean}) {

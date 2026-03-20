@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { ClockCircleOutlined } from "@ant-design/icons";
 import { Typography } from "antd";
-import { CarAuction } from "@/types.ts";
-import {toMoneyFormat} from "@/utils.ts";
-import {Link} from "react-router-dom";
+import { CarAuction } from "@/types";
+import {toMoneyFormat} from "@/utils";
+import {Link} from "react-router";
 
 const {Title, Text } = Typography;
 
@@ -59,7 +59,7 @@ export default function AuctionItem({ listing }: { listing: CarAuction }) {
             </div>
             <div>
                 <Title className={'leading-none'} level={5}>{listing.year} {listing.brand} {listing.model}</Title>
-                <Text className={'leading-none block'} >{listing.millage} KM · {listing.engine} · {listing.transmission} . {listing.drivetrain}</Text>
+                <Text className={'leading-none block'} >{listing.mileage} KM · {listing.engine} · {listing.transmission} . {listing.drivetrain}</Text>
                 <Text className={'leading-none block'} type={'secondary'}>{listing.tags.join(', ')}</Text>
             </div>
         </Link>

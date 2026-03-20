@@ -7,32 +7,57 @@ import {
     SendOutlined,
     StarOutlined, UserOutlined
 } from "@ant-design/icons";
-import {CarAuction, CarItem, Dealer, User} from "@/types.ts";
-import {toMoneyFormat} from "@/utils.ts";
+import {CarItem, Dealer, MiniDealer} from "@/types";
+import {toMoneyFormat} from "@/utils";
 import {formatDate} from "date-fns";
 import CommentsComponent from "@/components/auction/commentComponent.tsx";
 import AuctionItem from "@/components/auctionItem.tsx";
 import {AuctionDescription} from "@/screens/auctionScreen.tsx";
-import {Link, useParams} from "react-router-dom";
-import {useMemo, useState} from "react";
-import {generateCarAuction, generateCarListing, generateDealers} from "@/data/generator.ts";
+import {Link, useParams} from "react-router";
+import {useEffect, useState} from "react";
 import ListingComponent from "@/components/listingComponent.tsx";
+import {useAppDispatch, useAppSelector} from "@/store/hooks.ts";
+import {clearCurrentListing, fetchListingAsync, fetchListingByIdAsync} from "@/store/reducers/listingSlice.ts";
+import {fetchAuctionsAsync} from "@/store/reducers/auctionSlice.ts";
 
 const {Title, Text} = Typography;
 export default function ListingScreen() {
     const {id} = useParams<{ id: string }>();
-    const [auctions] = useState<CarAuction[]>(Array.from({length: 20}, (_, id) => generateCarAuction(id)));
-    const [listings] = useState<CarItem[]>(Array.from({length: 20}, (_, id) => generateCarListing(id,generateDealers(Number(id)))));
+    const dispatch = useAppDispatch();
+    const {
+        currentListing,
+        relatedListings,
+        currentListingLoading
+    } = useAppSelector((state) => state.listing);
+    const auctions = useAppSelector((state) => state.auction.endingSoon);
     const [myBid, setMyBid] = useState<number>(0);
-    // Ensure id is a valid number before generating the auction
-    const listing: CarItem | null = useMemo(() => {
-        if (!id || isNaN(Number(id))) return null;
-        const carListing = generateCarListing(Number(id), generateDealers(Number(id)));
-        setMyBid(carListing.price)
-        return carListing;
-    }, [id]);
+    const listing: CarItem | undefined  = currentListing;
 
-    if (!listing) {
+    useEffect(() => {
+        if (!id) {
+            return;
+        }
+
+        dispatch(fetchListingByIdAsync(id));
+        dispatch(fetchListingAsync({page: 1, pageSize: 24}));
+        dispatch(fetchAuctionsAsync());
+
+        return () => {
+            dispatch(clearCurrentListing());
+        };
+    }, [dispatch, id]);
+
+    useEffect(() => {
+        if (listing) {
+            setMyBid(listing.price);
+        }
+    }, [listing]);
+
+    if (currentListingLoading) {
+        return <div className="text-center py-10">Loading listing...</div>;
+    }
+
+    if (!id || !listing) {
         return <div className="text-center py-10">Invalid listing item</div>;
     }
     return <div className="py-4 px-4 lg:px-16 text-current">
@@ -40,7 +65,7 @@ export default function ListingScreen() {
             <div>
                 <Title className={'leading-none !my-0'}
                        level={3}>{listing.year} {listing.brand} {listing.model}</Title>
-                <Text className={'leading-none !my-0'}>{listing.millage} KM
+                <Text className={'leading-none !my-0'}>{listing.mileage} KM
                     · {listing.engine} · {listing.transmission} . {listing.drivetrain}</Text>
             </div>
             <div className={'flex gap-2'}>
@@ -112,7 +137,7 @@ export default function ListingScreen() {
                                     <Title level={5} className={'leading-none !my-0 '}>Seller</Title>
                                     <Text
                                         className={'leading-none !my-0'}><Avatar size={'small'} icon={
-                                        <UserOutlined/>}/> {(listing.seller as Dealer).name || (listing.seller as User).username}
+                                        <UserOutlined/>}/> {listing.seller.name}
                                     </Text>
                                     <Title level={5} className={'leading-none !my-0 '}>Views</Title>
                                     <Text
@@ -142,7 +167,7 @@ export default function ListingScreen() {
                                 Place Bid
                             </Button>
                         </div>
-                        <Divider type={'vertical'}/>
+                        <Divider orientation={'vertical'}/>
                         <div className={'flex gap-2 items-center'}>
                             <Button icon={<StarOutlined/>} size={'large'} color={'default'}
                                     variant={'outlined'}>Watch</Button>
@@ -157,7 +182,7 @@ export default function ListingScreen() {
                         <div>
                             <Title level={4}>Videos</Title>
                             <div className="grid grid-cols-2 gap-4">
-                                {listing.video.map((video, index) => {
+                                {listing.video.map((video:string, index:number) => {
                                     const videoId = video.split("v=")[ 1 ]?.split("&")[ 0 ]; // Extract YouTube video ID
                                     return (
                                         <a
@@ -184,16 +209,16 @@ export default function ListingScreen() {
                 </div>
             </div>
             <div className={'col-span-2'}>
-                {(listing.seller as Dealer).name && <DealerComponent dealer={listing.seller as Dealer}/>}
+                {(listing.seller).name && <DealerComponent dealer={listing.seller}/>}
                 <Title className={'!my-4'} level={4}>Auctions Ending Soon</Title>
                 <div className={'grid grid-cols-1 md:grid-cols-2 gap-8 mb-8'}>
-                    {auctions.sort((a, b) => new Date(a.ending).getTime() - new Date(b.ending).getTime()).slice(0, 8).map((listing) => (
+                    {[...auctions].sort((a, b) => new Date(a.ending).getTime() - new Date(b.ending).getTime()).slice(0, 8).map((listing) => (
                         <AuctionItem key={listing.id} listing={listing}/>
                     ))}
                 </div>
                 <Title className={'!my-4'} level={4}>New Listing</Title>
                 <div className={'grid grid-cols-1 md:grid-cols-2 gap-8'}>
-                    {listings.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()).slice(0, 8).map((listing) => (
+                    {relatedListings.map((listing: CarItem) => (
                         <ListingComponent key={listing.id} listing={listing}/>
                     ))}
                 </div>
@@ -202,16 +227,16 @@ export default function ListingScreen() {
     </div>
 }
 
-export function DealerComponent({dealer}: { dealer: Dealer }) {
+export function DealerComponent({dealer}: { dealer: MiniDealer | Dealer }) {
 
     return (<Link to={`/dealers/${dealer.id}`} className={'flex flex-col items-center justify-center gap-2 bg-dark-400/50 hover:bg-dark-400/70 cursor-alias rounded-xl p-8'}>
         <Title level={3}>Dealer Profile</Title>
         <Avatar size={'large'} className={'!h-20 !w-20'} src={dealer.profile} shape={'circle'}/>
         <Title level={5}>{dealer.name}</Title>
         <div className={'flex gap-4 items-center'}>
-            <div><Title className={'!leading-none !my-0 text-center'}>{dealer.listing_count}</Title>
+            <div><Title className={'!leading-none !my-0 text-center'}>{dealer.listingCount}</Title>
                 <Text className={'!leading-none !mt-0 !mb-4 text-center'} type={'secondary'}>Listings</Text></div>
-            <div><Title className={'!leading-none !my-0 text-center'}>{dealer.sold_count}</Title>
+            <div><Title className={'!leading-none !my-0 text-center'}>{dealer.soldCount}</Title>
                 <Text className={'!leading-none !mt-0 !mb-4 text-center'} type={'secondary'}>Sold Vehicles</Text></div>
             <div><Title className={'!leading-none !my-0 text-center'}>{dealer.views}</Title>
                 <Text className={'!leading-none !mt-0 !mb-4 text-center'} type={'secondary'}>Views</Text></div>

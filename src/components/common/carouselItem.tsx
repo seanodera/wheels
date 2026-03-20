@@ -1,8 +1,8 @@
-import {CarAuction, CarItem} from "@/types.ts";
+import {CarAuction, CarItem} from "@/types";
 import {useEffect, useState} from "react";
 import {HighlightBackground} from "@/components/common.tsx";
 import {ClockCircleOutlined} from "@ant-design/icons";
-import {toMoneyFormat} from "@/utils.ts";
+import {toMoneyFormat} from "@/utils";
 import {Typography} from "antd";
 
 const {Title, Text} = Typography;
@@ -59,7 +59,7 @@ export default function CarouselItem({featured}: { featured: CarAuction | CarIte
                                 {featured.year} {featured.brand} {featured.model}
                             </Title>
                             <Text type={'secondary'} className="leading-none !my-0">
-                                {featured.millage} KM · {featured.engine}
+                                {featured.mileage} KM · {featured.engine}
                             </Text>
                         </div>
                     </div>
@@ -103,7 +103,7 @@ export default function CarouselItem({featured}: { featured: CarAuction | CarIte
                                     {featured.year} {featured.brand} {featured.model}
                                 </Title>
                                 <Text type={'secondary'} className="leading-none !my-0">
-                                    {featured.millage} KM · {featured.engine}
+                                    {featured.mileage} KM · {featured.engine}
                                 </Text>
                             </div>
                         </div>

@@ -1,10 +1,12 @@
-import {generateCarListing} from "@/data/generator.ts";
+
 import CustomCarousel from "@/components/customCarousel.tsx";
 import CarouselItem from "@/components/common/carouselItem.tsx";
+import {useAppSelector} from "@/store/hooks.ts";
 
 
 export default function ListingBanner(){
-    const featured = Array.from({length: 9}, (_, id) =>  generateCarListing(id));
+    const {popularListings, newListings, listings} = useAppSelector((state) => state.listing);
+    const featured = (popularListings.length ? popularListings : newListings.length ? newListings : listings).slice(0, 9);
 
     return (
         <div className="px-4 lg:px-16 w-screen pt-4">

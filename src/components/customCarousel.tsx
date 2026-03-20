@@ -1,5 +1,5 @@
 import { ReactNode, useRef, useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { Button, Carousel, Typography } from "antd";
 import { LeftOutlined, RightOutlined } from "@ant-design/icons";
 import {useMediaQuery} from "react-responsive";

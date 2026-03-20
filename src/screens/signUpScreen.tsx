@@ -1,8 +1,8 @@
 import {Avatar, Form, Typography, Input, Button} from "antd";
 import LogoComponent from "../assets/logoComponent.tsx";
-import {Link, useNavigate} from "react-router-dom";
-import {useAppDispatch} from "@/hooks.ts";
-import {asyncSignUp} from "@/features/authenticationSlice.ts";
+import {Link, useNavigate} from "react-router";
+import {useAppDispatch} from "@/store/hooks.ts";
+import {asyncSignUp} from "@/store/reducers/authenticationSlice.ts";
 import {useState} from "react";
 
 const {Title, Text} = Typography;

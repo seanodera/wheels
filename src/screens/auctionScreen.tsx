@@ -1,82 +1,128 @@
-import {useParams} from "react-router-dom";
+import {useParams} from "react-router";
 import {useEffect, useMemo, useState} from "react";
-import {CarAuction, CarItem} from "@/types.ts";
-import {generateCarAuction} from "@/data/generator.ts";
+import type {CarAuction, CarItem, Dealer, MiniDealer, User} from "@/types";
 import {Avatar, Button, Divider, InputNumber, Typography} from "antd";
-import { startCase } from "lodash";
-
+import {startCase} from "lodash";
 import {
     ArrowUpOutlined,
     ClockCircleOutlined,
-    MessageOutlined, NotificationOutlined,
+    MessageOutlined,
+    NotificationOutlined,
     PlusOutlined,
     SendOutlined,
     StarOutlined,
     UserOutlined
 } from "@ant-design/icons";
 import AuctionItem from "@/components/auctionItem.tsx";
-import {deduceTimingValues, toMoneyFormat} from "@/utils.ts";
+import {deduceTimingValues, toMoneyFormat} from "@/utils";
 import {formatDate} from "date-fns";
 import CommentsComponent from "@/components/auction/commentComponent.tsx";
+import {useAppDispatch, useAppSelector} from "@/store/hooks.ts";
+import {clearCurrentAuction, fetchAuctionByIdAsync, fetchAuctionsAsync} from "@/store/reducers/auctionSlice.ts";
 
 const {Title, Text, Paragraph} = Typography;
+
+const sellerDisplayName = (seller: User | Dealer | MiniDealer) => {
+    if ("username" in seller && seller.username) return seller.username;
+    if ("name" in seller && seller.name) return seller.name;
+    return seller.name;
+};
+
+const asMileage = (listing: CarAuction) =>
+    Number((listing as unknown as {millage?: number | string}).millage ?? listing.mileage ?? 0);
+
 export default function AuctionScreen() {
     const {id} = useParams<{ id: string }>();
-    const [listings] = useState<CarAuction[]>(Array.from({length: 20}, (_, id) => generateCarAuction(id)));
+    const dispatch = useAppDispatch();
+    const {
+        currentAuction,
+        currentAuctionLoading,
+        endingSoon,
+        newlyListed,
+        error
+    } = useAppSelector((state) => state.auction as {
+        currentAuction: CarAuction | null;
+        currentAuctionLoading: boolean;
+        endingSoon: CarAuction[];
+        newlyListed: CarAuction[];
+        error: string | null;
+    });
     const [myBid, setMyBid] = useState<number>(0);
-    // Ensure id is a valid number before generating the auction
-    const listing: CarAuction | null = useMemo(() => {
-        if (!id || isNaN(Number(id))) return null;
-        const auction = generateCarAuction(Number(id));
-        setMyBid(auction.currentBid + 50000)
-        return auction;
-    }, [id]);
-
     const [countDown, setCountDown] = useState("");
+    const listing = currentAuction;
+
+    useEffect(() => {
+        if (!id) return;
+        dispatch(fetchAuctionByIdAsync(id));
+        dispatch(fetchAuctionsAsync());
+        return () => {
+            dispatch(clearCurrentAuction());
+        };
+    }, [dispatch, id]);
+
+    useEffect(() => {
+        if (!listing) return;
+        setMyBid(Number(listing.currentBid) + 50000);
+    }, [listing]);
 
     useEffect(() => {
         const updateCountdown = () => {
-            if (listing) {
+            if (!listing) return;
+            const {diff, days, hours, minutes} = deduceTimingValues(new Date(listing.ending));
 
-                const {diff, days, hours, minutes} = deduceTimingValues(new Date(listing.ending))
-
-
-                if (diff <= 0) {
-                    setCountDown("Ended");
-                    return;
-                }
-
-
-                if (days > 0) {
-                    setCountDown(`${days} day${days > 1 ? "s" : ""}`);
-                } else if (hours > 0) {
-                    setCountDown(`${hours} hour${hours > 1 ? "s" : ""}`);
-                } else {
-                    setCountDown(`${minutes} min${minutes > 1 ? "s" : ""}`);
-                }
+            if (diff <= 0) {
+                setCountDown("Ended");
+                return;
             }
+
+            if (days > 0) {
+                setCountDown(`${days} day${days > 1 ? "s" : ""}`);
+                return;
+            }
+            if (hours > 0) {
+                setCountDown(`${hours} hour${hours > 1 ? "s" : ""}`);
+                return;
+            }
+            setCountDown(`${minutes} min${minutes > 1 ? "s" : ""}`);
         };
 
-
         updateCountdown();
-
-        const interval = setInterval(updateCountdown, 60000); // Update every minute
-
+        const interval = setInterval(updateCountdown, 60000);
         return () => clearInterval(interval);
-    }, [listing, listing?.ending]);
+    }, [listing]);
 
-    if (!listing) {
-        return <div className="text-center py-10">Invalid auction item</div>;
+    const relatedEndingSoon = useMemo(
+        () => endingSoon.filter((item: CarAuction) => String(item.id) !== String(listing?.id)).slice(0, 8),
+        [endingSoon, listing?.id]
+    );
+    const relatedNewlyListed = useMemo(
+        () => newlyListed.filter((item: CarAuction) => String(item.id) !== String(listing?.id)).slice(0, 8),
+        [newlyListed, listing?.id]
+    );
+
+    if (currentAuctionLoading) {
+        return <div className="text-center py-10">Loading auction...</div>;
     }
+
+    if (!id || !listing) {
+        return <div className="text-center py-10">{error || "Invalid auction item"}</div>;
+    }
+
+    const topBidder = listing.bids[listing.bids.length - 1]?.user as User | undefined;
+    const currentBid = Number(listing.currentBid) || 0;
+    const minBid = currentBid + 50000;
+    const mileage = asMileage(listing);
 
     return (
         <div className="py-4 px-4 lg:px-16 text-current">
             <div className={'flex flex-col md:flex-row justify-between items-start md:items-center w-full pb-4 gap-4'}>
                 <div>
-                    <Title className={'leading-none !my-0'}
-                           level={3}>{listing.year} {listing.brand} {listing.model}</Title>
-                    <Text className={'leading-none !my-0'}>{listing.millage} KM
-                        · {listing.engine} · {listing.transmission} . {listing.drivetrain}</Text>
+                    <Title className={'leading-none !my-0'} level={3}>
+                        {listing.year} {listing.brand} {listing.model}
+                    </Title>
+                    <Text className={'leading-none !my-0'}>
+                        {mileage} KM · {listing.engine} · {listing.transmission} . {listing.drivetrain}
+                    </Text>
                 </div>
                 <div className={'flex gap-2'}>
                     <Button icon={<StarOutlined/>} size={'large'} color={'default'} variant={'outlined'}>Watch</Button>
@@ -85,15 +131,14 @@ export default function AuctionScreen() {
             </div>
             <div className="grid grid-cols-3 lg:grid-cols-5 grid-rows-4 gap-2">
                 <div className="col-span-3 row-span-4 relative">
-                    {/* Main Image */}
                     <img
-                        src={listing.images[ 0 ] || "/placeholder.jpg"}
+                        src={listing.images[0] || "/placeholder.jpg"}
                         className="w-full h-full object-cover rounded-lg aspect-video"
                         alt={`${listing.brand} ${listing.model}`}
                     />
                 </div>
 
-                {listing.images.slice(1, 8).map((img, index) => (
+                {listing.images.slice(1, 8).map((img: string, index: number) => (
                     <img
                         key={index}
                         src={img || "/placeholder.jpg"}
@@ -102,9 +147,9 @@ export default function AuctionScreen() {
                     />
                 ))}
                 <div className={'w-full h-full object-cover rounded-lg aspect-video bg-cover'}
-                     style={{backgroundImage: `url("${listing.images[ 9 ]}")`}}>
+                     style={{backgroundImage: `url("${listing.images[9]}")`}}>
                     <div className={'w-full h-full flex flex-col justify-center items-center rounded-lg bg-dark/70'}>
-                        <Title level={5}>{listing.images.length - 8} More Images</Title>
+                        <Title level={5}>{Math.max(0, listing.images.length - 8)} More Images</Title>
                         <Button className={'aspect-square'} type={'text'} variant={'outlined'} ghost
                                 icon={<PlusOutlined className={'text-xl'}/>} shape={'round'} size={'large'}/>
                     </div>
@@ -116,52 +161,56 @@ export default function AuctionScreen() {
                         <div className={'p-8'}>
                             <div className={'grid grid-cols-2 lg:grid-cols-4 gap-4'}>
                                 <div>
-                                    <Title className={'leading-none !my-0 '} type={'secondary'}
-                                           level={5}><ClockCircleOutlined/> Time Left</Title>
+                                    <Title className={'leading-none !my-0 '} type={'secondary'} level={5}>
+                                        <ClockCircleOutlined/> Time Left
+                                    </Title>
                                     <Title className={'leading-none !my-0'} level={5}>{countDown}</Title>
                                 </div>
                                 <div>
-                                    <Title className={'leading-none !my-0 '} type={'secondary'}
-                                           level={5}><ArrowUpOutlined/> Highest Bid</Title>
-                                    <Title className={'leading-none !my-0'}
-                                           level={5}>KSH {toMoneyFormat(listing.currentBid)}</Title>
+                                    <Title className={'leading-none !my-0 '} type={'secondary'} level={5}>
+                                        <ArrowUpOutlined/> Highest Bid
+                                    </Title>
+                                    <Title className={'leading-none !my-0'} level={5}>
+                                        KSH {toMoneyFormat(currentBid)}
+                                    </Title>
                                 </div>
                                 <div>
                                     <Title className={'leading-none !my-0 '} type={'secondary'} level={5}># Bids</Title>
                                     <Title className={'leading-none !my-0'} level={5}>{listing.bids.length}</Title>
                                 </div>
                                 <div>
-                                    <Title className={'leading-none !my-0 '} type={'secondary'}
-                                           level={5}><MessageOutlined/> Comments</Title>
+                                    <Title className={'leading-none !my-0 '} type={'secondary'} level={5}>
+                                        <MessageOutlined/> Comments
+                                    </Title>
                                     <Title className={'leading-none !my-0'} level={5}>{listing.comments.length}</Title>
                                 </div>
                             </div>
                             <div className={'flex flex-col lg:flex-row justify-between gap-4 py-4'}>
                                 <div>
-                                    <div className={'flex gap-2 items-center mb-4'}><Title
-                                        className={'leading-none !my-0'}
-                                        level={4}>Current Bid</Title> <Text
-                                        className={'leading-none !my-0'}><Avatar size={'small'} icon={
-                                        <UserOutlined/>}/> {listing.bids[ listing.bids.length - 1 ].user.username}
-                                    </Text>
+                                    <div className={'flex gap-2 items-center mb-4'}>
+                                        <Title className={'leading-none !my-0'} level={4}>Current Bid</Title>
+                                        {topBidder && (
+                                            <Text className={'leading-none !my-0'}>
+                                                <Avatar size={'small'} icon={<UserOutlined/>}/> Current bidder
+                                            </Text>
+                                        )}
                                     </div>
-                                    <Title level={2}>KSH {toMoneyFormat(listing.currentBid)}</Title>
+                                    <Title level={2}>KSH {toMoneyFormat(currentBid)}</Title>
                                 </div>
                                 <div>
                                     <div className={'grid grid-cols-2 gap-x-4 gap-y-1'}>
                                         <Title level={5} className={'leading-none !my-0 '}>Seller</Title>
-                                        <Text
-                                            className={'leading-none !my-0'}><Avatar size={'small'} icon={
-                                            <UserOutlined/>}/> {listing.seller.username}</Text>
+                                        <Text className={'leading-none !my-0'}>
+                                            <Avatar size={'small'} icon={<UserOutlined/>}/> {String(sellerDisplayName(listing.seller))}
+                                        </Text>
                                         <Title level={5} className={'leading-none !my-0 '}>Ending</Title>
-                                        <Text
-                                            className={'leading-none !my-0'}> {formatDate(listing.ending, 'eee, MMM dd hh:mm bb')}</Text>
+                                        <Text className={'leading-none !my-0'}>
+                                            {formatDate(new Date(listing.ending), "eee, MMM dd hh:mm bb")}
+                                        </Text>
                                         <Title level={5} className={'leading-none !my-0 '}>Views</Title>
-                                        <Text
-                                            className={'leading-none !my-0'}> {600}</Text>
+                                        <Text className={'leading-none !my-0'}>{listing.views ?? 0}</Text>
                                         <Title level={5} className={'leading-none !my-0 '}>Watching</Title>
-                                        <Text
-                                            className={'leading-none !my-0'}>{50}</Text>
+                                        <Text className={'leading-none !my-0'}>{listing.favorites ?? 0}</Text>
                                     </div>
                                 </div>
                             </div>
@@ -169,7 +218,7 @@ export default function AuctionScreen() {
                         <div className="bg-dark-400 rounded-b-lg p-8 flex lg:flex-row flex-col justify-between gap-2 items-center">
                             <div className={'flex gap-2 items-center'}>
                                 <InputNumber
-                                    min={listing.currentBid + 50000}
+                                    min={minBid}
                                     value={myBid}
                                     step={50000}
                                     placeholder={'Enter Bid'}
@@ -177,19 +226,21 @@ export default function AuctionScreen() {
                                     size="large"
                                     className="text-lg !max-w-sm !w-full"
                                     prefix={'KSH'}
-                                    formatter={(value) => toMoneyFormat(value || 0)}
-                                    onChange={(e) => setMyBid(e || listing.currentBid + 50000)}
+                                    formatter={(value) => toMoneyFormat(Number(value || 0))}
+                                    onChange={(value) => setMyBid(Number(value || minBid))}
                                 />
-                                <Button type="primary"  size="large" className="text-lg block">
+                                <Button type="primary" size="large" className="text-lg block">
                                     Place Bid
                                 </Button>
                             </div>
-                            <Divider type={'vertical'}/>
+                            <Divider orientation={'vertical'}/>
                             <div className={'flex gap-2 items-center'}>
-                                <Button icon={<StarOutlined/>} size={'large'} color={'default'}
-                                        variant={'outlined'}>Watch</Button>
-                                <Button icon={<NotificationOutlined/>} size={'large'} color={'default'}
-                                        variant={'outlined'}>Notify Me</Button>
+                                <Button icon={<StarOutlined/>} size={'large'} color={'default'} variant={'outlined'}>
+                                    Watch
+                                </Button>
+                                <Button icon={<NotificationOutlined/>} size={'large'} color={'default'} variant={'outlined'}>
+                                    Notify Me
+                                </Button>
                             </div>
                         </div>
                     </div>
@@ -199,22 +250,9 @@ export default function AuctionScreen() {
                             <div>
                                 <Title level={4}>Videos</Title>
                                 <div className="grid grid-cols-2 gap-4">
-                                    {listing.video.map((video, index) => {
-                                        const videoId = video.split("v=")[1]?.split("&")[0]; // Extract YouTube video ID
-                                        return (
-                                            <a
-                                                key={index}
-                                                href={video}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="block"
-                                            >
-                                                <img
-                                                    src={`https://img.youtube.com/vi/${videoId}/hqdefault.jpg`}
-                                                    alt={`Video ${index + 1}`}
-                                                    className="w-full rounded-lg shadow-lg"
-                                                />
-                                            </a>
+                                    {listing.video.map((video: string, index: number) => {
+                                       return (
+                                            <video src={video} key={index}/>
                                         );
                                     })}
                                 </div>
@@ -228,14 +266,14 @@ export default function AuctionScreen() {
                 <div className={'col-span-2'}>
                     <Title className={'!my-4'} level={4}>Auctions Ending Soon</Title>
                     <div className={'grid grid-cols-1 md:grid-cols-2 gap-8 mb-8'}>
-                        {listings.sort((a, b) => new Date(a.ending).getTime() - new Date(b.ending).getTime()).slice(0,8).map((listing) => (
-                            <AuctionItem key={listing.id} listing={listing}/>
+                        {relatedEndingSoon.map((auction: CarAuction) => (
+                            <AuctionItem key={auction.id} listing={auction}/>
                         ))}
                     </div>
                     <Title className={'!my-4'} level={4}>New Listing</Title>
                     <div className={'grid grid-cols-1 md:grid-cols-2 gap-8'}>
-                        {listings.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()).slice(0,8).map((listing) => (
-                            <AuctionItem key={listing.id} listing={listing}/>
+                        {relatedNewlyListed.map((auction: CarAuction) => (
+                            <AuctionItem key={auction.id} listing={auction}/>
                         ))}
                     </div>
                 </div>
@@ -244,13 +282,8 @@ export default function AuctionScreen() {
     );
 }
 
-
-
-
-
-
-export function AuctionDescription({ listing }: { listing: CarAuction | CarItem }) {
-    const { description } = listing;
+export function AuctionDescription({listing}: { listing: CarAuction | CarItem }) {
+    const {description} = listing;
 
     return (
         <div className="space-y-8">

@@ -2,7 +2,7 @@ import { useState } from "react";
 import {  Avatar, Button, Input, List } from "antd";
 import { Comment } from '@ant-design/compatible';
 import {ArrowDownOutlined, ArrowUpOutlined, UserOutlined} from "@ant-design/icons";
-import {CarAuction, CarItem, CommentItem} from "@/types.ts";
+import {CarAuction, CarItem, CommentItem} from "@/types";
 
 const { TextArea } = Input;
 
@@ -11,16 +11,17 @@ const { TextArea } = Input;
 export default function CommentsComponent({ listing }: { listing: CarAuction|CarItem }) {
     const [comments, setComments] = useState<CommentItem[]>(listing.comments);
     const [newComment, setNewComment] = useState("");
-    const [replyingTo, setReplyingTo] = useState<number | null>(null);
+    const [replyingTo, setReplyingTo] = useState<string | null>(null);
     const [replyText, setReplyText] = useState("");
 
     const addComment = () => {
         if (!newComment.trim()) return;
         const newCommentObj: CommentItem = {
-            id: comments.length + 1,
+            id: (comments.length + 1).toString(),
             user: {
-                id: 1, username: "You",
-                email: ""
+                id: '1',
+                email: "",
+                name: 'you'
             },
             text: newComment,
             timestamp: new Date().toISOString(),
@@ -30,14 +31,15 @@ export default function CommentsComponent({ listing }: { listing: CarAuction|Car
         setNewComment("");
     };
 
-    const addReply = (parentId: number) => {
+    const addReply = (parentId: string) => {
         if (!replyText.trim()) return;
 
         const newReply: CommentItem = {
-            id: Date.now(),
+            id: Date.now().toString(),
             user: {
-                id: 1, username: "You",
-                email: ""
+                id: '1',
+                email: "",
+                name: "you"
             },
             text: replyText,
             timestamp: new Date().toISOString(),
@@ -80,7 +82,7 @@ export default function CommentsComponent({ listing }: { listing: CarAuction|Car
                     <li key={comment.id} className="mb-4">
                         <Comment
                             className={'rounded-lg !bg-dark-400/30 !px-4'}
-                            author={comment.user.username}
+                            author={comment.user.name}
                             avatar={<Avatar icon={<UserOutlined />} />}
                             content={<p>{comment.text}</p>}
                             datetime={new Date(comment.timestamp).toLocaleString()}
@@ -116,7 +118,7 @@ export default function CommentsComponent({ listing }: { listing: CarAuction|Car
                                         <li key={reply.id} className={'rounded-lg'}>
                                             <Comment
                                                 className={'rounded-lg'}
-                                                author={reply.user.username}
+                                                author={reply.user.name}
                                                 avatar={<Avatar icon={<UserOutlined />} />}
                                                 content={<p>{reply.text}</p>}
                                                 datetime={new Date(reply.timestamp).toLocaleString()}

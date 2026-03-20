@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { AutoComplete, Avatar, Button, Typography, Drawer } from "antd";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { motion } from "framer-motion";
 import LogoComponent from "@/assets/logoComponent.tsx";
-import { useAppSelector } from "@/hooks.ts";
+import { useAppSelector } from "@/store/hooks.ts";
 import { UserOutlined, MenuOutlined, CloseOutlined, SearchOutlined } from "@ant-design/icons";
 
-const { Title, Text } = Typography;
+const { Title} = Typography;
 
 const carOptions = [
     { value: "Toyota Corolla" },
@@ -77,7 +77,7 @@ export default function Navbar() {
                         <Link to="/profile" className="hidden md:flex gap-2 items-center">
                             <div>
                                 <Title className="!leading-none !my-0" level={5}>{user.firstName} {user.lastName}</Title>
-                                <Text className="!leading-none !my-0" type="secondary">{user.username}</Text>
+                                {/*<Text className="!leading-none !my-0" type="secondary">{user.name}</Text>*/}
                             </div>
                             <Avatar src={user.profilePicture} icon={!user.profilePicture && <UserOutlined />} size="large" shape="circle" />
                         </Link>
@@ -135,7 +135,7 @@ export default function Navbar() {
                             <Avatar src={user.profilePicture} icon={!user.profilePicture && <UserOutlined />} size="large" />
                             <div>
                                 <Title className="!leading-none !my-0" level={5}>{user.firstName} {user.lastName}</Title>
-                                <Text className="!leading-none !my-0" type="secondary">{user.username}</Text>
+                                {/*<Text className="!leading-none !my-0" type="secondary">{user.username}</Text>*/}
                             </div>
                         </Link>
                     ) : (

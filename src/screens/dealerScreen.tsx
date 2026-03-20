@@ -3,10 +3,21 @@ import DealerBanner from "@/components/dealer/banner.tsx";
 import NewDealers from "@/components/dealer/newDealers.tsx";
 import PopularDealers from "@/components/dealer/popularDealers.tsx";
 import {Button, Typography} from "antd";
+import {useEffect} from "react";
+import {useAppDispatch, useAppSelector} from "@/store/hooks.ts";
+import {fetchHomeData} from "@/store/reducers/wheelsSlice.ts";
 
 const {Title, Text} = Typography;
 export default function DealerScreen() {
-    // const [dealers ] = useState<Dealer[]>(Array.from({length: 20}, (_, id) => generateDealers(id)));
+    const dispatch = useAppDispatch();
+    const {newDealers, popularDealers} = useAppSelector((state) => state.wheels);
+
+    useEffect(() => {
+        if (!newDealers.length && !popularDealers.length) {
+            dispatch(fetchHomeData());
+        }
+    }, [dispatch, newDealers.length, popularDealers.length]);
+
     return <div className={'space-y-24 pt-8 pb-24'}>
         <DealerBanner/>
         <NewDealers/>
@@ -18,5 +29,4 @@ export default function DealerScreen() {
         </div>
     </div>
 }
-
 

@@ -1,6 +1,6 @@
 import {Avatar, Button, Checkbox, Flex, Form, Input, Typography} from "antd";
 import LogoComponent from "../assets/logoComponent.tsx";
-import {Link} from "react-router-dom";
+import {Link} from "react-router";
 
 const {Title,Text} = Typography;
 
