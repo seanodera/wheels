@@ -1,23 +1,24 @@
-import { useState } from "react";
-import { AutoComplete, Avatar, Button, Typography, Drawer } from "antd";
-import { Link } from "react-router";
-import { motion } from "framer-motion";
+import {useState} from "react";
+import {AutoComplete, Avatar, Button, Typography, Drawer} from "antd";
+import {Link} from "react-router";
+import {motion} from "framer-motion";
 import LogoComponent from "@/assets/logoComponent.tsx";
-import { useAppSelector } from "@/store/hooks.ts";
-import { UserOutlined, MenuOutlined, CloseOutlined, SearchOutlined } from "@ant-design/icons";
+import {useAppSelector} from "@/store/hooks.ts";
+import {UserOutlined, MenuOutlined, CloseOutlined, SearchOutlined} from "@ant-design/icons";
+import {supabase} from "@/utils";
 
-const { Title} = Typography;
+const {Title} = Typography;
 
 const carOptions = [
-    { value: "Toyota Corolla" },
-    { value: "Honda Civic" },
-    { value: "Ford Mustang" },
-    { value: "BMW 3 Series" },
-    { value: "Mercedes-Benz C-Class" },
-    { value: "Tesla Model S" },
-    { value: "Nissan Altima" },
-    { value: "Chevrolet Camaro" },
-    { value: "Volkswagen Golf" },
+    {value: "Toyota Corolla"},
+    {value: "Honda Civic"},
+    {value: "Ford Mustang"},
+    {value: "BMW 3 Series"},
+    {value: "Mercedes-Benz C-Class"},
+    {value: "Tesla Model S"},
+    {value: "Nissan Altima"},
+    {value: "Chevrolet Camaro"},
+    {value: "Volkswagen Golf"},
 ];
 
 export default function Navbar() {
@@ -34,19 +35,41 @@ export default function Navbar() {
         }
     };
 
+    async function dataTester() {
+        try {
+            const response = await supabase
+                .from("listings")
+                .select("*, vehicles(*)")
+                .order("created_at", {ascending: false})
+                .limit(10)
+            if (response.error) {
+                console.error("Error fetching data:", response.error);
+            }
+            if (response.data) {
+                console.info("Data fetched successfully:", response.data);
+            }
+            console.log(response);
+        } catch (error) {
+            console.error("Error fetching data:", error);
+        }
+    }
+
     return (
         <>
             {/* Navbar Container */}
-            <div className="flex w-screen px-4 md:px-16 py-3 justify-between items-center shadow-lg top-0 left-0 right-0 z-50">
+            <div
+                className="flex w-screen px-4 md:px-16 py-3 justify-between items-center shadow-lg top-0 left-0 right-0 z-50">
                 {/* Left Section (Logo + Links) */}
                 <div className="flex items-center gap-6">
                     <Link to="/" className="flex gap-2 items-center">
-                        <Avatar className="animate-spin" shape="square" size="large" src={<LogoComponent className="text-primary" />} />
+                        <Avatar className="animate-spin" shape="square" size="large"
+                                src={<LogoComponent className="text-primary"/>}/>
                         <Title className="leading-none !my-0" level={4}>Wheela</Title>
                     </Link>
 
                     {/* Desktop Navigation */}
                     <div className="hidden md:flex gap-2 items-center">
+                        <Button onClick={dataTester} type={'primary'}>Test</Button>
                         <NavbarItem to="/auctions">Auctions</NavbarItem>
                         <NavbarItem to="/listings">Listings</NavbarItem>
                         <NavbarItem to="/dealers">Dealers</NavbarItem>
@@ -57,7 +80,7 @@ export default function Navbar() {
                 <div className="flex items-center gap-4">
                     {/* Search Button (Mobile) */}
                     <button onClick={() => setIsSearchOpen(!isSearchOpen)} className="md:hidden text-xl">
-                        <SearchOutlined />
+                        <SearchOutlined/>
                     </button>
 
                     {/* Search Bar (Desktop) */}
@@ -76,10 +99,12 @@ export default function Navbar() {
                     {user ? (
                         <Link to="/profile" className="hidden md:flex gap-2 items-center">
                             <div>
-                                <Title className="!leading-none !my-0" level={5}>{user.firstName} {user.lastName}</Title>
+                                <Title className="!leading-none !my-0"
+                                       level={5}>{user.firstName} {user.lastName}</Title>
                                 {/*<Text className="!leading-none !my-0" type="secondary">{user.name}</Text>*/}
                             </div>
-                            <Avatar src={user.profilePicture} icon={!user.profilePicture && <UserOutlined />} size="large" shape="circle" />
+                            <Avatar src={user.profilePicture} icon={!user.profilePicture && <UserOutlined/>}
+                                    size="large" shape="circle"/>
                         </Link>
                     ) : (
                         <div className="hidden md:flex gap-2">
@@ -90,7 +115,7 @@ export default function Navbar() {
 
                     {/* Mobile Menu Button */}
                     <button onClick={() => setIsMenuOpen(true)} className="md:hidden text-white text-2xl">
-                        <MenuOutlined />
+                        <MenuOutlined/>
                     </button>
                 </div>
             </div>
@@ -98,10 +123,10 @@ export default function Navbar() {
             {/* Mobile Search Bar (Animated) */}
             {isSearchOpen && (
                 <motion.div
-                    initial={{ y: "100%", opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    exit={{ y: "100%", opacity: 0 }}
-                    transition={{ duration: 0.3 }}
+                    initial={{y: "100%", opacity: 0}}
+                    animate={{y: 0, opacity: 1}}
+                    exit={{y: "100%", opacity: 0}}
+                    transition={{duration: 0.3}}
                     className="lg:hidden bottom-0 left-0 right-0  shadow-lg p-4 z-50 flex justify-center"
                 >
                     <AutoComplete
@@ -113,7 +138,7 @@ export default function Navbar() {
                         variant="filled"
                     />
                     <button onClick={() => setIsSearchOpen(false)} className="ml-2 text-xl">
-                        <CloseOutlined />
+                        <CloseOutlined/>
                     </button>
                 </motion.div>
             )}
@@ -132,16 +157,20 @@ export default function Navbar() {
                     <NavbarItem to="/dealers">Dealers</NavbarItem>
                     {user ? (
                         <Link to="/profile" className="flex gap-2 items-center">
-                            <Avatar src={user.profilePicture} icon={!user.profilePicture && <UserOutlined />} size="large" />
+                            <Avatar src={user.profilePicture} icon={!user.profilePicture && <UserOutlined/>}
+                                    size="large"/>
                             <div>
-                                <Title className="!leading-none !my-0" level={5}>{user.firstName} {user.lastName}</Title>
+                                <Title className="!leading-none !my-0"
+                                       level={5}>{user.firstName} {user.lastName}</Title>
                                 {/*<Text className="!leading-none !my-0" type="secondary">{user.username}</Text>*/}
                             </div>
                         </Link>
                     ) : (
                         <div className="flex flex-col gap-2">
-                            <Link to="/login"><Button size="large" type="primary" className="w-full">Login</Button></Link>
-                            <Link to="/sign-up"><Button size="large" type="primary" ghost className="w-full">Sign up</Button></Link>
+                            <Link to="/login"><Button size="large" type="primary"
+                                                      className="w-full">Login</Button></Link>
+                            <Link to="/sign-up"><Button size="large" type="primary" ghost className="w-full">Sign
+                                up</Button></Link>
                         </div>
                     )}
                 </div>
@@ -151,7 +180,7 @@ export default function Navbar() {
 }
 
 /* Navbar Item Component */
-function NavbarItem({ to, children }: { to: string, children: React.ReactNode }) {
+function NavbarItem({to, children}: { to: string, children: React.ReactNode }) {
     return (
         <Link to={to}>
             <Button className="transition-all duration-500" size="large" type="text">

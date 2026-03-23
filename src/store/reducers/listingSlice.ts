@@ -1,7 +1,6 @@
 import {createAsyncThunk, createSlice, type PayloadAction} from "@reduxjs/toolkit";
 import type {CarItem} from "@/types";
-import {supabase} from "@/utils";
-import {keysToCamelCase} from "@/utils/caseConverter.ts";
+import {supabase, toCarItem} from "@/utils";
 
 
 export interface ListingState {
@@ -33,8 +32,6 @@ type FetchListingsPayload = {
     totalCount: number;
 };
 
-const normalizeSupabaseListing = (input: unknown): CarItem =>
-    keysToCamelCase<CarItem>(input);
 
 const rankPopular = (listings: CarItem[]) =>
     [...listings]
@@ -56,9 +53,8 @@ export const fetchListingAsync = createAsyncThunk<FetchListingsPayload, FetchLis
 
         try {
             const {data, error, count} = await supabase
-                .from("vehicles")
-                .select("*", {count: "exact"})
-                .eq("type", "listing")
+                .from("listings")
+                .select("*, vehicle:vehicles(*)", {count: "exact"})
                 .order("created_at", {ascending: false})
                 .range(from, to);
 
@@ -67,7 +63,7 @@ export const fetchListingAsync = createAsyncThunk<FetchListingsPayload, FetchLis
             }
 
             const listings = Array.isArray(data)
-                ? data.map((listing) => normalizeSupabaseListing(listing))
+                ? data.map((listing) => toCarItem(listing))
                 : [];
 
             const totalCount = typeof count === "number" ? count : listings.length;
@@ -93,17 +89,16 @@ export const fetchListingByIdAsync = createAsyncThunk<CarItem, string, {rejectVa
 
         try {
             const {data, error} = await supabase
-                .from("vehicles")
-                .select("*")
-                .eq("id", listingId)
-                .eq("type", "listing")
+                .from("listings")
+                .select("*, vehicle:vehicles(*)")
+                .eq("vehicle_id", listingId)
                 .maybeSingle();
 
             if (error || !data) {
                 return rejectWithValue(error?.message ?? "Listing not found");
             }
 
-            return normalizeSupabaseListing(data);
+            return toCarItem(data);
         } catch (error) {
             if (error instanceof Error) {
                 return rejectWithValue("Error fetching listing: " + error.message);

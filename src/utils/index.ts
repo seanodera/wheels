@@ -1,5 +1,6 @@
 export * from './caseConverter.ts'
 export * from './supabase.ts'
+export * from './dbHelpers.ts'
 
 export function toMoneyFormat(amount: number, shorten: boolean = false): string {
     if (shorten) {

@@ -86,7 +86,7 @@ export default function AuctionsScreen() {
         <div className="py-4 px-4 lg:px-16">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 pb-4">
                 <div className="flex flex-col xl:flex-row items-start xl:items-center gap-3 w-full">
-                    <Title className="leading-none !my-0" level={2}>Auctions</Title>
+                    <Title className="leading-none !my-0 text-nowrap" level={2}>Auctions</Title>
 
                     <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 w-full">
                         <Select

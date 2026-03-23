@@ -1,7 +1,7 @@
 import {createAsyncThunk, createSlice} from "@reduxjs/toolkit";
 import type {CarAuction} from "@/types";
 import {supabase} from "@/utils";
-import {keysToCamelCase} from "@/utils/caseConverter.ts";
+import {toCarAuction, toNumber} from "@/utils/dbHelpers.ts";
 
 interface AuctionState {
     auctions: CarAuction[];
@@ -29,17 +29,10 @@ const initialState: AuctionState = {
     error: null
 };
 
-const normalizeAuction = (row: unknown): CarAuction => keysToCamelCase<CarAuction>(row);
 
-const toNumber = (value: unknown, fallback = 0): number => {
-    const num = Number(value);
-    return Number.isFinite(num) ? num : fallback;
-};
+
 
 const deriveCollections = (auctions: CarAuction[]) => {
-    const endingSoon = [...auctions]
-        .sort((a, b) => new Date(a.ending).getTime() - new Date(b.ending).getTime());
-
     const newlyListed = [...auctions]
         .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
@@ -50,7 +43,7 @@ const deriveCollections = (auctions: CarAuction[]) => {
 
     const inspected = auctions.filter((auction) => Boolean(auction.verified));
 
-    return {endingSoon, newlyListed, noReserve, lowestMileage, inspected};
+    return { newlyListed, noReserve, lowestMileage, inspected};
 };
 
 export const fetchAuctionsAsync = createAsyncThunk<CarAuction[], void, {rejectValue: string}>(
@@ -58,16 +51,15 @@ export const fetchAuctionsAsync = createAsyncThunk<CarAuction[], void, {rejectVa
     async (_, {rejectWithValue}) => {
         try {
             const response = await supabase
-                .from("vehicles")
-                .select("*")
-                .eq("type", "auction")
+                .from("auctions")
+                .select("*, vehicle:vehicles(*)")
                 .order("created_at", {ascending: false});
 
             if (response.error) {
                 return rejectWithValue(response.error.message);
             }
 
-            return (response.data ?? []).map(normalizeAuction);
+            return (response.data ?? []).map(toCarAuction);
         } catch (error) {
             if (error instanceof Error) {
                 return rejectWithValue(error.message);
@@ -82,10 +74,9 @@ export const fetchAuctionByIdAsync = createAsyncThunk<CarAuction, string, {rejec
     async (id, {rejectWithValue}) => {
         try {
             const response = await supabase
-                .from("vehicles")
-                .select("*")
-                .eq("type", "auction")
-                .eq("id", id)
+                .from("auction")
+                .select("*, vehicle:vehicles(*)")
+                .eq("vehicle_id", id)
                 .maybeSingle();
 
             if (response.error) {
@@ -96,7 +87,7 @@ export const fetchAuctionByIdAsync = createAsyncThunk<CarAuction, string, {rejec
                 return rejectWithValue("Auction not found");
             }
 
-            return normalizeAuction(response.data);
+            return toCarAuction(response.data);
         } catch (error) {
             if (error instanceof Error) {
                 return rejectWithValue(error.message);
@@ -112,7 +103,10 @@ const auctionSlice = createSlice({
     reducers: {
         clearCurrentAuction: (state) => {
             state.currentAuction = null;
-        }
+        },
+        setEndingSoon: (state, action) => {
+            state.endingSoon = action.payload;
+}
     },
     extraReducers: (builder) => {
         builder
@@ -124,7 +118,6 @@ const auctionSlice = createSlice({
                 state.loading = false;
                 state.auctions = action.payload;
                 const derived = deriveCollections(action.payload);
-                state.endingSoon = derived.endingSoon;
                 state.newlyListed = derived.newlyListed;
                 state.noReserve = derived.noReserve;
                 state.lowestMileage = derived.lowestMileage;
@@ -149,5 +142,5 @@ const auctionSlice = createSlice({
     }
 });
 
-export const {clearCurrentAuction} = auctionSlice.actions;
+export const {clearCurrentAuction,setEndingSoon} = auctionSlice.actions;
 export default auctionSlice.reducer;

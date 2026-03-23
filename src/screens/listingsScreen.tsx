@@ -1,5 +1,4 @@
 import ListingBanner from "@/components/listings/banner.tsx";
-import {isCarAuction} from "@/components/common.tsx";
 import AuctionItem from "@/components/auctionItem.tsx";
 import ListingComponent from "@/components/listingComponent.tsx";
 import CustomCarousel from "@/components/customCarousel.tsx";
@@ -7,6 +6,7 @@ import {useEffect} from "react";
 import {useAppDispatch, useAppSelector} from "@/store/hooks.ts";
 import {fetchListingAsync} from "@/store/reducers/listingSlice.ts";
 import type {CarItem} from "@/types";
+import {isCarAuction} from "@/utils";
 
 
 export default function ListingsScreen(){

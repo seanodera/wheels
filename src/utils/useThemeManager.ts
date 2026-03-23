@@ -1,6 +1,6 @@
 import { useEffect } from "react";
-import { useAppDispatch, useAppSelector } from "@/store";
-import { setTheme } from "@/store"; // assumes you add setTheme reducer
+import { useAppDispatch, useAppSelector } from "@/store/hooks.ts";
+import { setTheme } from "@/store/reducers/mainSlice.ts";
 
 export function useThemeManager() {
   const dispatch = useAppDispatch();

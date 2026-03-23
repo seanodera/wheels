@@ -1,17 +1,17 @@
 import {Tabs, Typography, Card, Avatar, Button, Empty} from "antd";
 import {useEffect, useState} from "react";
 import {useLocation, useNavigate} from "react-router";
-import {useAppDispatch, useAppSelector} from "@/store";
+import {useAppDispatch, useAppSelector} from "@/store/hooks.ts";
 import {formatDate} from "date-fns";
 import {UserOutlined} from "@ant-design/icons";
 import ListingComponent from "@/components/listingComponent.tsx";
-import {isCarAuction} from "@/components/common.tsx";
 import {CarItem} from "@/types";
 import AuctionItem from "@/components/auctionItem.tsx";
 import {
 asyncFetchCompletedAuctions, asyncFetchUserAuctions,
     asyncFetchWishlist
 } from "@/store/reducers/authenticationSlice.ts";
+import {isCarAuction} from "@/utils";
 
 const {Title, Text} = Typography;
 

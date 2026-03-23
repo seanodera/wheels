@@ -1,13 +1,15 @@
 import type {CarAuction, CarItem, Dealer} from "@/types";
 import {createAsyncThunk, createSlice} from "@reduxjs/toolkit";
 import {keysToCamelCase} from "@/utils/caseConverter.ts";
-import {supabase} from "@/utils";
+import {isCarAuction, supabase} from "@/utils";
+import {toCarAuction, toCarItem} from "@/utils/dbHelpers.ts";
+import {setEndingSoon} from "@/store/reducers/auctionSlice.ts";
 
 
 interface WheelsState {
     featuredListings: (CarItem | CarAuction)[];
     auctionsEndingSoon: CarAuction[];
-    newListings: CarItem[];
+    newListings: (CarItem | CarAuction)[];
     newDealers: Dealer[];
     popularListings: CarItem[];
     popularDealers: Dealer[];
@@ -31,14 +33,13 @@ const initialState: WheelsState = {
 type HomeCuratedPayload = {
     featured_listings: (CarItem | CarAuction)[];
     ending_soon: CarAuction[];
-    new_listings: CarItem[];
+    new_listings:(CarItem | CarAuction)[];
     new_dealers: Dealer[];
     popular_listings: CarItem[];
     popular_dealers: Dealer[];
 };
 
-const toCarItem = (value: unknown): CarItem => keysToCamelCase<CarItem>(value);
-const toCarAuction = (value: unknown): CarAuction => keysToCamelCase<CarAuction>(value);
+
 const toDealer = (value: unknown): Dealer => keysToCamelCase<Dealer>(value);
 const isAuctionLike = (value: unknown) => {
     if (!value || typeof value !== "object") return false;
@@ -47,7 +48,7 @@ const isAuctionLike = (value: unknown) => {
 };
 
 export const fetchHomeData = createAsyncThunk<HomeCuratedPayload, void, {rejectValue: string}>('wheels/fetchHomeData',
-    async (_, {rejectWithValue}) => {
+    async (_, {rejectWithValue,dispatch}) => {
         try {
             const [
                 featuredResponse,
@@ -64,23 +65,16 @@ export const fetchHomeData = createAsyncThunk<HomeCuratedPayload, void, {rejectV
                     .eq("featured", true)
                     .order("created_at", {ascending: false})
                     .limit(10),
+                supabase.from('auctions').select('*, vehicle:vehicles(*)').order('ending', {ascending: true}).limit(10),
                 supabase
-                    .from("vehicles")
+                    .from("newly_listed_feed")
                     .select("*")
-                    .eq("type", "auction")
-                    .order("ending", {ascending: true})
+                    .order("created_at", { ascending: false })
                     .limit(10),
                 supabase
-                    .from("vehicles")
-                    .select("*")
-                    .eq("type", "listing")
-                    .order("created_at", {ascending: false})
-                    .limit(10),
-                supabase
-                    .from("vehicles")
-                    .select("*")
-                    .eq("type", "listing")
-                    .order("views", {ascending: false})
+                    .from("listings")
+                    .select("*, vehicle:vehicles(*)")
+                    .order("views", {ascending: false, referencedTable: 'vehicles'})
                     .limit(10),
                 supabase
                     .from("dealers")
@@ -120,11 +114,11 @@ export const fetchHomeData = createAsyncThunk<HomeCuratedPayload, void, {rejectV
                 isAuctionLike(item) ? toCarAuction(item) : toCarItem(item)
             );
             const endingSoon = (endingSoonResponse.data ?? []).map(toCarAuction);
-            const newListings = (newListingsResponse.data ?? []).map(toCarItem);
+            const newListings = (newListingsResponse.data ?? []).map((item) => isCarAuction(item)? toCarAuction(item) :toCarItem(item));
             const popularListings = (popularListingsResponse.data ?? []).map(toCarItem);
             const newDealers = (newDealersResponse.data ?? []).map(toDealer);
             const popularDealers = (popularDealersResponse.data ?? []).map(toDealer);
-
+            dispatch(setEndingSoon(endingSoon))
             return {
                 featured_listings: featuredListings,
                 ending_soon: endingSoon,

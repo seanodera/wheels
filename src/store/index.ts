@@ -21,13 +21,6 @@ export const store = configureStore({
     },
 });
 
-export * from './hooks.ts'
-export * from './reducers/auctionSlice.ts'
-export * from './reducers/authenticationSlice.ts'
-export * from './reducers/mainSlice.ts'
-export * from './reducers/wheelsSlice.ts'
-export * from './reducers/listingSlice.ts'
-export * from './reducers/dealerslice.ts'
 // Infer the `RootState` and `AppDispatch` types from the store itself
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
