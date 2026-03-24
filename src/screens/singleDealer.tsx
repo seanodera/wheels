@@ -3,16 +3,17 @@ import CustomCarousel from "@/components/customCarousel.tsx";
 import ListingComponent from "@/components/listingComponent.tsx";
 import {useEffect, useMemo, useState} from "react";
 import {useParams} from "react-router";
-import type {CarItem, Dealer} from "@/types";
-import {supabase} from "@/utils";
+import type {CarAuction, CarItem, Dealer} from "@/types";
+import {isCarAuction, supabase} from "@/utils";
 import {keysToCamelCase} from "@/utils/caseConverter.ts";
+import AuctionItem from "@/components/auctionItem.tsx";
 
 const {Title, Text, Paragraph} = Typography;
 
 export default function SingleDealer() {
     const {id} = useParams<{ id: string }>();
     const [dealer, setDealer] = useState<Dealer | null>(null);
-    const [listings, setListings] = useState<CarItem[]>([]);
+    const [listings, setListings] = useState<(CarItem | CarAuction)[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -34,8 +35,7 @@ export default function SingleDealer() {
                         .maybeSingle(),
                     supabase
                         .from("vehicles")
-                        .select("*")
-                        .eq("type", "listing")
+                        .select("*,auction:auctions(*), listing:listings(*)")
                         .eq("seller_id", id)
                         .order("created_at", {ascending: false})
                         .limit(16)
@@ -57,7 +57,30 @@ export default function SingleDealer() {
                 }
 
                 setDealer(keysToCamelCase<Dealer>(dealerResponse.data));
-                setListings((listingsResponse.data ?? []).map((listing) => keysToCamelCase<CarItem>(listing)));
+
+                const data = (listingsResponse.data ?? [])
+                    .map((listing) => {
+                        if (!listing) return undefined;
+
+                        if (listing.type === 'auction' && listing.auction) {
+                            return keysToCamelCase<CarAuction>({
+                                ...listing,
+                                ...listing.auction,
+                            });
+                        }
+
+                        if (listing.type === 'listing' && listing.listing) {
+                            return keysToCamelCase<CarItem>({
+                                ...listing,
+                                ...listing.listing,
+                            });
+                        }
+
+                        return undefined;
+                    })
+                    .filter((item): item is CarAuction | CarItem => Boolean(item));
+
+                setListings(data);
             } catch (e) {
                 if (e instanceof Error) {
                     setError(e.message);
@@ -124,8 +147,8 @@ export default function SingleDealer() {
                         <Title className={'!leading-none !my-0'}>{dealer.soldCount}</Title>
                         <Text className={'!leading-none !mt-0 !mb-4'} type={'secondary'}>Sold Vehicles</Text>
 
-                        <Title className={'!leading-none !my-0'}>{dealer.views}</Title>
-                        <Text className={'!leading-none !mt-0 !mb-4'} type={'secondary'}>Views</Text>
+                        <Title className={'leading-none! !my-0'}>{dealer.views}</Title>
+                        <Text className={'leading-none! !mt-0 !mb-4'} type={'secondary'}>Views</Text>
                     </div>
                 </div>
             </div>
@@ -135,7 +158,9 @@ export default function SingleDealer() {
                     <Text type={"secondary"}>No listings available for this dealer yet.</Text>
                 ) : (
                     <div className={'grid grid-cols-2 md:grid-cols-4 gap-8 mt-4'}>
-                        {listings.map((listing, index) => <ListingComponent listing={listing} key={`${listing.id}-${index}`}/>)}
+                        {listings.map((listing, index) => isCarAuction(listing) ?
+                            <AuctionItem listing={listing} key={index}/> :
+                            <ListingComponent listing={listing} key={`${listing.id}-${index}`}/>)}
                     </div>
                 )}
             </div>

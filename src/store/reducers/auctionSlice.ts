@@ -30,8 +30,6 @@ const initialState: AuctionState = {
 };
 
 
-
-
 const deriveCollections = (auctions: CarAuction[]) => {
     const newlyListed = [...auctions]
         .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
@@ -39,20 +37,24 @@ const deriveCollections = (auctions: CarAuction[]) => {
     const noReserve = auctions.filter((auction) => toNumber(auction.startingBid) <= 0);
 
     const lowestMileage = [...auctions]
-        .sort((a, b) => toNumber((a as unknown as {millage?: unknown}).millage, toNumber(a.mileage)) - toNumber((b as unknown as {millage?: unknown}).millage, toNumber(b.mileage)));
+        .sort((a, b) => toNumber((a as unknown as {
+            millage?: unknown
+        }).millage, toNumber(a.mileage)) - toNumber((b as unknown as {
+            millage?: unknown
+        }).millage, toNumber(b.mileage)));
 
     const inspected = auctions.filter((auction) => Boolean(auction.verified));
 
-    return { newlyListed, noReserve, lowestMileage, inspected};
+    return {newlyListed, noReserve, lowestMileage, inspected};
 };
 
-export const fetchAuctionsAsync = createAsyncThunk<CarAuction[], void, {rejectValue: string}>(
+export const fetchAuctionsAsync = createAsyncThunk<CarAuction[], void, { rejectValue: string }>(
     "auction/fetchAuctions",
     async (_, {rejectWithValue}) => {
         try {
             const response = await supabase
                 .from("auctions")
-                .select("*, vehicle:vehicles(*)")
+                .select("*, vehicle:vehicles(*, seller:dealers(*)")
                 .order("created_at", {ascending: false});
 
             if (response.error) {
@@ -69,13 +71,13 @@ export const fetchAuctionsAsync = createAsyncThunk<CarAuction[], void, {rejectVa
     }
 );
 
-export const fetchAuctionByIdAsync = createAsyncThunk<CarAuction, string, {rejectValue: string}>(
+export const fetchAuctionByIdAsync = createAsyncThunk<CarAuction, string, { rejectValue: string }>(
     "auction/fetchAuctionById",
     async (id, {rejectWithValue}) => {
         try {
             const response = await supabase
-                .from("auction")
-                .select("*, vehicle:vehicles(*)")
+                .from("auctions")
+                .select("*, vehicle:vehicles(*, seller:dealers(*)")
                 .eq("vehicle_id", id)
                 .maybeSingle();
 
@@ -97,6 +99,40 @@ export const fetchAuctionByIdAsync = createAsyncThunk<CarAuction, string, {rejec
     }
 );
 
+export const setCurrentAuctionAsync = createAsyncThunk<CarAuction, string, { rejectValue: string }>(
+    "auction/setAuctionById",
+    async (id, {rejectWithValue, getState}) => {
+        const {auction} = getState() as { auction: AuctionState };
+        try {
+            const item = auction.auctions.find((auction) => auction.id === id);
+
+            if (item) return item;
+
+            const response = await supabase
+                .from("auctions")
+                .select("*, vehicle:vehicles(*, seller:dealers(*))")
+                .eq("vehicle_id", id)
+                .maybeSingle();
+
+            if (response.error) {
+                return rejectWithValue(response.error.message);
+            }
+
+            if (!response.data) {
+                return rejectWithValue("Auction not found");
+            }
+
+            console.log(response.data)
+            return toCarAuction(response.data);
+        } catch (error) {
+            if (error instanceof Error) {
+                return rejectWithValue(error.message);
+            }
+            return rejectWithValue("Failed to fetch auction");
+        }
+    }
+);
+
 const auctionSlice = createSlice({
     name: "auction",
     initialState,
@@ -106,7 +142,7 @@ const auctionSlice = createSlice({
         },
         setEndingSoon: (state, action) => {
             state.endingSoon = action.payload;
-}
+        }
     },
     extraReducers: (builder) => {
         builder
@@ -126,21 +162,37 @@ const auctionSlice = createSlice({
             .addCase(fetchAuctionsAsync.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload ?? "Failed to fetch auctions";
-            })
-            .addCase(fetchAuctionByIdAsync.pending, (state) => {
-                state.currentAuctionLoading = true;
-                state.error = null;
-            })
+            });
+        builder.addCase(fetchAuctionByIdAsync.pending, (state) => {
+            state.currentAuctionLoading = true;
+            state.error = null;
+        })
             .addCase(fetchAuctionByIdAsync.fulfilled, (state, action) => {
                 state.currentAuctionLoading = false;
                 state.currentAuction = action.payload;
+                if (state.auctions.some((auction) => auction.id === action.payload.id)) return;
+                state.auctions.push(action.payload);
             })
             .addCase(fetchAuctionByIdAsync.rejected, (state, action) => {
+                state.currentAuctionLoading = false;
+                state.error = action.payload ?? "Failed to fetch auction";
+            });
+        builder.addCase(setCurrentAuctionAsync.pending, (state) => {
+            state.currentAuctionLoading = true;
+            state.error = null;
+        })
+            .addCase(setCurrentAuctionAsync.fulfilled, (state, action) => {
+                state.currentAuctionLoading = false;
+                state.currentAuction = action.payload;
+                if (state.auctions.some((auction) => auction.id === action.payload.id)) return;
+                state.auctions.push(action.payload);
+            })
+            .addCase(setCurrentAuctionAsync.rejected, (state, action) => {
                 state.currentAuctionLoading = false;
                 state.error = action.payload ?? "Failed to fetch auction";
             });
     }
 });
 
-export const {clearCurrentAuction,setEndingSoon} = auctionSlice.actions;
+export const {clearCurrentAuction, setEndingSoon} = auctionSlice.actions;
 export default auctionSlice.reducer;

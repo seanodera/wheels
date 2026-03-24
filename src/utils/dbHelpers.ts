@@ -1,9 +1,12 @@
 import {CarAuction, CarItem} from "@/types";
 import {keysToCamelCase} from "@/utils/caseConverter.ts";
 
+type VehiclePayload<T> = T & {
+    vehicle?: Partial<T>;
+};
 
 export const toCarItem = (value: unknown): CarItem => {
-    const cleaned = keysToCamelCase<any>(value);
+    const cleaned = keysToCamelCase<VehiclePayload<CarItem>>(value);
     // console.log(cleaned, cleaned.vehicle)
     return {
         ...cleaned,
@@ -11,7 +14,7 @@ export const toCarItem = (value: unknown): CarItem => {
     }
 };
 export const toCarAuction = (value: unknown): CarAuction => {
-    const cleaned = keysToCamelCase<any>(value);
+    const cleaned = keysToCamelCase<VehiclePayload<CarAuction>>(value);
     // console.log(cleaned)
     return {
         ...cleaned,
@@ -24,6 +27,7 @@ export const toNumber = (value: unknown, fallback = 0): number => {
     return Number.isFinite(num) ? num : fallback;
 };
 
-export function isCarAuction(item: any): item is CarAuction {
-    return item.type === 'auction';
+export function isCarAuction(item: unknown): item is CarAuction {
+    if (!item) return false;
+    return Boolean(item) && typeof item === "object" && "type" in item && item.type === "auction";
 }

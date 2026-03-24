@@ -16,9 +16,12 @@ import {
 import AuctionItem from "@/components/auctionItem.tsx";
 import {deduceTimingValues, toMoneyFormat} from "@/utils";
 import {formatDate} from "date-fns";
-import CommentsComponent from "@/components/auction/commentComponent.tsx";
 import {useAppDispatch, useAppSelector} from "@/store/hooks.ts";
-import {clearCurrentAuction, fetchAuctionByIdAsync, fetchAuctionsAsync} from "@/store/reducers/auctionSlice.ts";
+import {
+    clearCurrentAuction,
+    fetchAuctionsAsync,
+    setCurrentAuctionAsync
+} from "@/store/reducers/auctionSlice.ts";
 
 const {Title, Text, Paragraph} = Typography;
 
@@ -53,7 +56,7 @@ export default function AuctionScreen() {
 
     useEffect(() => {
         if (!id) return;
-        dispatch(fetchAuctionByIdAsync(id));
+        dispatch(setCurrentAuctionAsync(id));
         dispatch(fetchAuctionsAsync());
         return () => {
             dispatch(clearCurrentAuction());
@@ -108,7 +111,8 @@ export default function AuctionScreen() {
         return <div className="text-center py-10">{error || "Invalid auction item"}</div>;
     }
 
-    const topBidder = listing.bids[listing.bids.length - 1]?.user as User | undefined;
+    console.log(listing);
+    const topBidder = listing.bids? listing.bids[listing.bids.length - 1]?.user as User | undefined : undefined;
     const currentBid = Number(listing.currentBid) || 0;
     const minBid = currentBid + 50000;
     const mileage = asMileage(listing);
@@ -117,10 +121,10 @@ export default function AuctionScreen() {
         <div className="py-4 px-4 lg:px-16 text-current">
             <div className={'flex flex-col md:flex-row justify-between items-start md:items-center w-full pb-4 gap-4'}>
                 <div>
-                    <Title className={'leading-none !my-0'} level={3}>
+                    <Title className={'leading-none my-0!'} level={3}>
                         {listing.year} {listing.brand} {listing.model}
                     </Title>
-                    <Text className={'leading-none !my-0'}>
+                    <Text className={'leading-none my-0!'}>
                         {mileage} KM · {listing.engine} · {listing.transmission} . {listing.drivetrain}
                     </Text>
                 </div>
@@ -161,36 +165,36 @@ export default function AuctionScreen() {
                         <div className={'p-8'}>
                             <div className={'grid grid-cols-2 lg:grid-cols-4 gap-4'}>
                                 <div>
-                                    <Title className={'leading-none !my-0 '} type={'secondary'} level={5}>
+                                    <Title className={'leading-none my-0! '} type={'secondary'} level={5}>
                                         <ClockCircleOutlined/> Time Left
                                     </Title>
-                                    <Title className={'leading-none !my-0'} level={5}>{countDown}</Title>
+                                    <Title className={'leading-none my-0!'} level={5}>{countDown}</Title>
                                 </div>
                                 <div>
-                                    <Title className={'leading-none !my-0 '} type={'secondary'} level={5}>
+                                    <Title className={'leading-none my-0! '} type={'secondary'} level={5}>
                                         <ArrowUpOutlined/> Highest Bid
                                     </Title>
-                                    <Title className={'leading-none !my-0'} level={5}>
+                                    <Title className={'leading-none my-0!'} level={5}>
                                         KSH {toMoneyFormat(currentBid)}
                                     </Title>
                                 </div>
                                 <div>
-                                    <Title className={'leading-none !my-0 '} type={'secondary'} level={5}># Bids</Title>
-                                    <Title className={'leading-none !my-0'} level={5}>{listing.bids.length}</Title>
+                                    <Title className={'leading-none my-0! '} type={'secondary'} level={5}># Bids</Title>
+                                    <Title className={'leading-none my-0!'} level={5}>{listing.bids? listing.bids.length : 0}</Title>
                                 </div>
                                 <div>
-                                    <Title className={'leading-none !my-0 '} type={'secondary'} level={5}>
+                                    <Title className={'leading-none my-0! '} type={'secondary'} level={5}>
                                         <MessageOutlined/> Comments
                                     </Title>
-                                    <Title className={'leading-none !my-0'} level={5}>{listing.comments.length}</Title>
+                                    <Title className={'leading-none my-0!'} level={5}>{listing.comments? listing.comments.length : 0}</Title>
                                 </div>
                             </div>
                             <div className={'flex flex-col lg:flex-row justify-between gap-4 py-4'}>
                                 <div>
                                     <div className={'flex gap-2 items-center mb-4'}>
-                                        <Title className={'leading-none !my-0'} level={4}>Current Bid</Title>
+                                        <Title className={'leading-none my-0!'} level={4}>Current Bid</Title>
                                         {topBidder && (
-                                            <Text className={'leading-none !my-0'}>
+                                            <Text className={'leading-none my-0!'}>
                                                 <Avatar size={'small'} icon={<UserOutlined/>}/> Current bidder
                                             </Text>
                                         )}
@@ -199,18 +203,18 @@ export default function AuctionScreen() {
                                 </div>
                                 <div>
                                     <div className={'grid grid-cols-2 gap-x-4 gap-y-1'}>
-                                        <Title level={5} className={'leading-none !my-0 '}>Seller</Title>
-                                        <Text className={'leading-none !my-0'}>
+                                        <Title level={5} className={'leading-none my-0! '}>Seller</Title>
+                                        <Text className={'leading-none my-0!'}>
                                             <Avatar size={'small'} icon={<UserOutlined/>}/> {String(sellerDisplayName(listing.seller))}
                                         </Text>
-                                        <Title level={5} className={'leading-none !my-0 '}>Ending</Title>
-                                        <Text className={'leading-none !my-0'}>
+                                        <Title level={5} className={'leading-none my-0! '}>Ending</Title>
+                                        <Text className={'leading-none my-0!'}>
                                             {formatDate(new Date(listing.ending), "eee, MMM dd hh:mm bb")}
                                         </Text>
-                                        <Title level={5} className={'leading-none !my-0 '}>Views</Title>
-                                        <Text className={'leading-none !my-0'}>{listing.views ?? 0}</Text>
-                                        <Title level={5} className={'leading-none !my-0 '}>Watching</Title>
-                                        <Text className={'leading-none !my-0'}>{listing.favorites ?? 0}</Text>
+                                        <Title level={5} className={'leading-none my-0! '}>Views</Title>
+                                        <Text className={'leading-none my-0!'}>{listing.views ?? 0}</Text>
+                                        <Title level={5} className={'leading-none my-0! '}>Watching</Title>
+                                        <Text className={'leading-none my-0!'}>{listing.favorites ?? 0}</Text>
                                     </div>
                                 </div>
                             </div>
@@ -224,7 +228,7 @@ export default function AuctionScreen() {
                                     placeholder={'Enter Bid'}
                                     variant="outlined"
                                     size="large"
-                                    className="text-lg !max-w-sm !w-full"
+                                    className="text-lg max-w-sm! w-full!"
                                     prefix={'KSH'}
                                     formatter={(value) => toMoneyFormat(Number(value || 0))}
                                     onChange={(value) => setMyBid(Number(value || minBid))}
@@ -260,22 +264,22 @@ export default function AuctionScreen() {
                         )}
                     </div>
                     <div>
-                        <CommentsComponent listing={listing}/>
+                        <Title className={'my-4!'} level={4}>New Listing</Title>
+                        <div className={'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8'}>
+                            {relatedNewlyListed.map((auction: CarAuction) => (
+                                <AuctionItem key={auction.id} listing={auction}/>
+                            ))}
+                        </div>
                     </div>
                 </div>
                 <div className={'col-span-2'}>
-                    <Title className={'!my-4'} level={4}>Auctions Ending Soon</Title>
+                    <Title className={'my-4!'} level={4}>Auctions Ending Soon</Title>
                     <div className={'grid grid-cols-1 md:grid-cols-2 gap-8 mb-8'}>
                         {relatedEndingSoon.map((auction: CarAuction) => (
                             <AuctionItem key={auction.id} listing={auction}/>
                         ))}
                     </div>
-                    <Title className={'!my-4'} level={4}>New Listing</Title>
-                    <div className={'grid grid-cols-1 md:grid-cols-2 gap-8'}>
-                        {relatedNewlyListed.map((auction: CarAuction) => (
-                            <AuctionItem key={auction.id} listing={auction}/>
-                        ))}
-                    </div>
+
                 </div>
             </div>
         </div>

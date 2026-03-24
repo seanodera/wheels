@@ -54,7 +54,7 @@ export const fetchListingAsync = createAsyncThunk<FetchListingsPayload, FetchLis
         try {
             const {data, error, count} = await supabase
                 .from("listings")
-                .select("*, vehicle:vehicles(*)", {count: "exact"})
+                .select("*, vehicle:vehicles(*, seller:dealers(*))",{count: "exact"})
                 .order("created_at", {ascending: false})
                 .range(from, to);
 
@@ -90,7 +90,7 @@ export const fetchListingByIdAsync = createAsyncThunk<CarItem, string, {rejectVa
         try {
             const {data, error} = await supabase
                 .from("listings")
-                .select("*, vehicle:vehicles(*)")
+                .select("*, vehicle:vehicles(*, seller:dealers(*))")
                 .eq("vehicle_id", listingId)
                 .maybeSingle();
 

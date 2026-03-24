@@ -53,8 +53,8 @@ export const loginAsync = createAsyncThunk<AuthSuccessPayload, LoginCredentials,
                 return rejectWithValue(userResponse.error.message);
             }
 
-            let dealerRecord = userResponse.data;
-            let onboardingRequired = false;
+            const dealerRecord = userResponse.data;
+            const onboardingRequired = false;
 
             if (!dealerRecord) {
 

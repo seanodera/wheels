@@ -65,7 +65,7 @@ export const fetchHomeData = createAsyncThunk<HomeCuratedPayload, void, {rejectV
                     .eq("featured", true)
                     .order("created_at", {ascending: false})
                     .limit(10),
-                supabase.from('auctions').select('*, vehicle:vehicles(*)').order('ending', {ascending: true}).limit(10),
+                supabase.from('auctions').select("*, vehicle:vehicles(*, seller:dealers(*))").order('ending', {ascending: true}).limit(10),
                 supabase
                     .from("newly_listed_feed")
                     .select("*")
@@ -73,7 +73,7 @@ export const fetchHomeData = createAsyncThunk<HomeCuratedPayload, void, {rejectV
                     .limit(10),
                 supabase
                     .from("listings")
-                    .select("*, vehicle:vehicles(*)")
+                    .select("*, vehicle:vehicles(*, seller:dealers(*))")
                     .order("views", {ascending: false, referencedTable: 'vehicles'})
                     .limit(10),
                 supabase

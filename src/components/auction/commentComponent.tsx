@@ -1,15 +1,31 @@
 import { useState } from "react";
-import {  Avatar, Button, Input, List } from "antd";
-import { Comment } from '@ant-design/compatible';
-import {ArrowDownOutlined, ArrowUpOutlined, UserOutlined} from "@ant-design/icons";
+import { Avatar, Button, Input, List } from "antd";
+import { ArrowDownOutlined, ArrowUpOutlined, UserOutlined } from "@ant-design/icons";
 import {CarAuction, CarItem, CommentItem} from "@/types";
 
 const { TextArea } = Input;
 
-
+function CommentCard({ comment }: { comment: CommentItem }) {
+    return (
+        <div className="rounded-lg bg-dark-400/30 px-4 py-3">
+            <div className="flex items-start gap-3">
+                <Avatar icon={<UserOutlined />} />
+                <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                        <span className="font-medium">{comment.user.name}</span>
+                        <span className="text-xs text-gray-400">
+                            {new Date(comment.timestamp).toLocaleString()}
+                        </span>
+                    </div>
+                    <p className="mb-0 mt-2 whitespace-pre-wrap">{comment.text}</p>
+                </div>
+            </div>
+        </div>
+    );
+}
 
 export default function CommentsComponent({ listing }: { listing: CarAuction|CarItem }) {
-    const [comments, setComments] = useState<CommentItem[]>(listing.comments);
+    const [comments, setComments] = useState<CommentItem[]>(listing.comments ?? []);
     const [newComment, setNewComment] = useState("");
     const [replyingTo, setReplyingTo] = useState<string | null>(null);
     const [replyText, setReplyText] = useState("");
@@ -62,7 +78,7 @@ export default function CommentsComponent({ listing }: { listing: CarAuction|Car
     return (
         <div className="mt-6">
             <h3 className="text-lg font-semibold mb-4">Comments</h3>
-
+            <Button type={'primary'} onClick={() => {console.log(comments)}}>Print</Button>
             {/* Add New Comment */}
             <div className={'flex items-end border border-gray-500 border-solid rounded-lg px-2 py-1 bg-dark-400/20 mb-4'}>
                 <TextArea
@@ -80,13 +96,7 @@ export default function CommentsComponent({ listing }: { listing: CarAuction|Car
                 dataSource={comments}
                 renderItem={(comment) => (
                     <li key={comment.id} className="mb-4">
-                        <Comment
-                            className={'rounded-lg !bg-dark-400/30 !px-4'}
-                            author={comment.user.name}
-                            avatar={<Avatar icon={<UserOutlined />} />}
-                            content={<p>{comment.text}</p>}
-                            datetime={new Date(comment.timestamp).toLocaleString()}
-                        />
+                        <CommentCard comment={comment} />
 
                         {/* Reply Section */}
                         {replyingTo === comment.id ? (
@@ -116,13 +126,7 @@ export default function CommentsComponent({ listing }: { listing: CarAuction|Car
                                     dataSource={comment.replies}
                                     renderItem={(reply) => (
                                         <li key={reply.id} className={'rounded-lg'}>
-                                            <Comment
-                                                className={'rounded-lg'}
-                                                author={reply.user.name}
-                                                avatar={<Avatar icon={<UserOutlined />} />}
-                                                content={<p>{reply.text}</p>}
-                                                datetime={new Date(reply.timestamp).toLocaleString()}
-                                            />
+                                            <CommentCard comment={reply} />
                                         </li>
                                     )}
                                 />

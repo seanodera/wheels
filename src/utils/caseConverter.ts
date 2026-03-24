@@ -33,8 +33,8 @@ const convertObjectKeys = (
   return input as JsonLike;
 };
 
-export const keysToCamelCase = <T = Object>(input: unknown): T =>
+export const keysToCamelCase = <T = object>(input: unknown): T =>
   convertObjectKeys(input, camelCase) as T;
 
-export const keysToSnakeCase = <T = Object>(input: unknown): T =>
+export const keysToSnakeCase = <T = object>(input: unknown): T =>
   convertObjectKeys(input, snakeCase) as T;

@@ -61,7 +61,7 @@ export interface BaseCar {
     featured?: boolean;
     views?: number;
     favorites?: number;
-    comments: CommentItem[];
+    comments?: CommentItem[];
     description: CarDescription;
     video: string[];
     tags: string[];
@@ -83,7 +83,7 @@ export interface CarAuction extends BaseCar {
     startingBid: number;
     currentBid: number;
     ending: string;
-    bids: Bid[];
+    bids?: Bid[];
 }
 
 export interface ListingFilters {

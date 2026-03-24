@@ -2,6 +2,7 @@ import {createAsyncThunk} from "@reduxjs/toolkit";
 import {keysToSnakeCase, supabase} from "@/utils";
 import {omit} from "lodash";
 import {Profile} from "@/types";
+import {normalizeError} from "@/store/thunks/authenticationThunks/login.ts";
 
 interface SignUpPayload {
     email: string;
@@ -53,8 +54,8 @@ export const asyncSignUp = createAsyncThunk(
 
             return profile
 
-        } catch (error: any) {
-            return rejectWithValue(error.message);
+        } catch (error: unknown) {
+            return rejectWithValue(normalizeError(error, "Failed to sign up"));
         }
     }
 );

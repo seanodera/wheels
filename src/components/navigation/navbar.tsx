@@ -38,10 +38,10 @@ export default function Navbar() {
     async function dataTester() {
         try {
             const response = await supabase
-                .from("listings")
-                .select("*, vehicles(*)")
-                .order("created_at", {ascending: false})
-                .limit(10)
+                .from("vehicles")
+                .select("*, listing:listings(*),auction:auctions(*)")
+                .eq('id','srDF1nEyPJj6TyGnRktoh')
+                .maybeSingle()
             if (response.error) {
                 console.error("Error fetching data:", response.error);
             }

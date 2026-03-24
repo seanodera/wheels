@@ -1,6 +1,7 @@
 import { ReactNode, useRef, useState, useEffect } from "react";
 import { Link } from "react-router";
 import { Button, Carousel, Typography } from "antd";
+import type { CarouselRef } from "antd/es/carousel";
 import { LeftOutlined, RightOutlined } from "@ant-design/icons";
 import {useMediaQuery} from "react-responsive";
 
@@ -23,7 +24,7 @@ export default function CustomCarousel({
     children?: ReactNode;
     autoPlay?: boolean;
 }) {
-    const carouselRef = useRef<any | null>(null);
+    const carouselRef = useRef<CarouselRef | null>(null);
     const [slidesToShow, setSlidesToShow] = useState(items);
 
     // Define breakpoints

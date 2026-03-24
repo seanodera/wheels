@@ -9,8 +9,8 @@ export function DealerItem({dealer, className = '', square}: {dealer: Dealer, cl
     return (<Link to={`/dealers/${dealer.id}`} className={`block w-full ${className}`}>
         <div className={'bg-dark-400/40 flex justify-between rounded-t-md p-4'}>
             <div>
-                <Title className={'leading-none !my-0'} level={5}>{dealer.name}</Title>
-                <Text className={'leading-none !my-0'}>{dealer.location.district}, {dealer.location.city}</Text>
+                <Title className={'leading-none my-0!'} level={5}>{dealer.name}</Title>
+                <Text className={'leading-none my-0!'}>{dealer.location.district}, {dealer.location.city}</Text>
             </div>
             <Button type={'text'} icon={<MoreOutlined/>} shape={'circle'}/>
         </div>
