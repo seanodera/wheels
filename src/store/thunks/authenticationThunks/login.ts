@@ -1,7 +1,7 @@
 import {createAsyncThunk} from "@reduxjs/toolkit";
 import type { Profile} from "@/types";
-import {keysToCamelCase} from "@/utils/caseConverter";
 import {supabase} from "@/utils/supabase.ts";
+import {fetchProfileByUserId} from "@/utils/profileQueries.ts";
 
 export interface AuthSuccessPayload {
     user: Profile;
@@ -43,22 +43,10 @@ export const loginAsync = createAsyncThunk<AuthSuccessPayload, LoginCredentials,
                 return rejectWithValue("Unable to find authenticated user");
             }
 
-            const userResponse = await supabase
-                .from("profiles")
-                .select("*")
-                .eq("id", authUser.id)
-                .maybeSingle();
-
-            if (userResponse.error) {
-                return rejectWithValue(userResponse.error.message);
-            }
-
-            const dealerRecord = userResponse.data;
+            const profile = await fetchProfileByUserId(authUser.id);
             const onboardingRequired = false;
 
-            if (!dealerRecord) {
-
-
+            if (!profile) {
                 return {
                     user: {} as Profile,
                     onboardingRequired,
@@ -67,7 +55,7 @@ export const loginAsync = createAsyncThunk<AuthSuccessPayload, LoginCredentials,
             }
 
             return {
-                user: keysToCamelCase<Profile>(dealerRecord),
+                user: profile,
                 onboardingRequired,
                 redirectTo: onboardingRequired ? "/settings" : "/"
             };

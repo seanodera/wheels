@@ -1,5 +1,6 @@
 import {createAsyncThunk} from "@reduxjs/toolkit";
-import {keysToSnakeCase, supabase} from "@/utils";
+import {keysToSnakeCase} from "@/utils/caseConverter.ts";
+import {supabase} from "@/utils/supabase.ts";
 import {omit} from "lodash";
 import {Profile} from "@/types";
 import {normalizeError} from "@/store/thunks/authenticationThunks/login.ts";
@@ -15,12 +16,17 @@ export const asyncSignUp = createAsyncThunk(
     "auth/signUp",
     async (payload: SignUpPayload, {rejectWithValue}) => {
         try {
-            const {email, password,firstName,lastName} = payload;
+            const {email, password, firstName, lastName} = payload;
 
-            // 1️⃣ Create auth user
             const {data: authData, error: authError} = await supabase.auth.signUp({
                 email,
                 password,
+                options: {
+                    data: {
+                        first_name: firstName,
+                        last_name: lastName,
+                    }
+                }
             });
 
             if (authError) {
@@ -28,32 +34,40 @@ export const asyncSignUp = createAsyncThunk(
             }
 
             const user = authData.user;
-            if (!user) return rejectWithValue("User not created");
-
-            // 2️⃣ Insert profile (optional but recommended)
-
-            const profile: Profile  = {
-                createdAt: new Date().toISOString(),
-                firstName: firstName,
-                lastName: lastName,
-                preferences: {currency: "", language: "", notifications: {email: false, push: false, sms: false}},
-                security: {recentLogins: [], twoFactorAuth: false},
-                verification: {emailVerified: false, kycVerified: false, phoneVerified: false},
-                id: user.id,
-                email: email
-
+            if (!user) {
+                return rejectWithValue("User not created");
             }
-            const clean = keysToSnakeCase(omit(profile, ['password']));
-            const {error: profileError} = await supabase.from("profiles").insert({
+
+            const profile: Profile = {
+                createdAt: new Date().toISOString(),
+                firstName,
+                lastName,
+                preferences: {
+                    currency: "KES",
+                    language: "en",
+                    notifications: {email: false, push: false, sms: false}
+                },
+                security: {recentLogins: [], twoFactorAuth: false},
+                verification: {
+                    emailVerified: Boolean(user.email_confirmed_at),
+                    kycVerified: false,
+                    phoneVerified: false
+                },
+                id: user.id,
+                email
+            };
+
+            const clean = keysToSnakeCase(omit(profile, ["password"]));
+            const {error: profileError} = await supabase.from("profiles").upsert({
                 ...clean,
                 id: user.id,
-
             });
 
-            if (profileError) return rejectWithValue(profileError.message);
+            if (profileError && authData.session) {
+                return rejectWithValue(profileError.message);
+            }
 
-            return profile
-
+            return profile;
         } catch (error: unknown) {
             return rejectWithValue(normalizeError(error, "Failed to sign up"));
         }

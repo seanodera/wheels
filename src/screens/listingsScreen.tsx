@@ -7,6 +7,7 @@ import {useAppDispatch, useAppSelector} from "@/store/hooks.ts";
 import {fetchListingAsync} from "@/store/reducers/listingSlice.ts";
 import type {CarItem} from "@/types";
 import {isCarAuction} from "@/utils";
+import LoadingScreen from "@/components/navigation/loadingScreen.tsx";
 
 
 export default function ListingsScreen(){
@@ -21,10 +22,7 @@ export default function ListingsScreen(){
     }, [dispatch, newListings.length, popularListings.length]);
 
     if (loading && !popularListings.length && !newListings.length) {
-        return <div className={"space-y-8 pb-8"}>
-            <ListingBanner/>
-            <div className={"px-4 lg:px-16 py-8"}>Loading listings...</div>
-        </div>;
+        return <LoadingScreen/>;
     }
 
     return <div className={'space-y-8 pb-8'}>

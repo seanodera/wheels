@@ -5,6 +5,7 @@ import AuctionItem from "@/components/auctionItem.tsx";
 import {useAppDispatch, useAppSelector} from "@/store/hooks.ts";
 import {fetchAuctionsAsync} from "@/store/reducers/auctionSlice.ts";
 import type {CarAuction} from "@/types";
+import LoadingScreen from "@/components/navigation/loadingScreen.tsx";
 
 const {Title, Text} = Typography;
 
@@ -86,7 +87,7 @@ export default function AuctionsScreen() {
         <div className="py-4 px-4 lg:px-16">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 pb-4">
                 <div className="flex flex-col xl:flex-row items-start xl:items-center gap-3 w-full">
-                    <Title className="leading-none !my-0 text-nowrap" level={2}>Auctions</Title>
+                    <Title className="leading-none my-0! text-nowrap" level={2}>Auctions</Title>
 
                     <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 w-full">
                         <Select
@@ -135,7 +136,7 @@ export default function AuctionsScreen() {
             </div>
 
             {error && <Text type="danger" className="block pb-2">{error}</Text>}
-            {loading && !filteredListings.length && <Text className="block pb-2">Loading auctions...</Text>}
+            {loading && !filteredListings.length && <LoadingScreen/>}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 py-4">
                 {filteredListings.map((listing: CarAuction) => (

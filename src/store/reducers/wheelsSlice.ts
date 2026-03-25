@@ -13,6 +13,7 @@ interface WheelsState {
     newDealers: Dealership[];
     popularListings: CarItem[];
     popularDealers: Dealership[];
+    fetched: boolean;
     loading: boolean;
     hasError: boolean;
     errorMessage: string | null;
@@ -27,7 +28,8 @@ const initialState: WheelsState = {
     newListings: [],
     popularDealers: [],
     popularListings: [],
-    errorMessage: null
+    errorMessage: null,
+    fetched: false
 };
 
 type HomeCuratedPayload = {
@@ -163,6 +165,7 @@ const WheelSlice = createSlice({
                 state.loading = false;
                 state.hasError = false;
                 state.errorMessage = null;
+                state.fetched = true
             })
             .addCase(fetchHomeData.rejected,(state,action) => {
                 state.loading = false;

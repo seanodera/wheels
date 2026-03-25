@@ -54,11 +54,11 @@ export default function CarouselItem({featured}: { featured: CarAuction | CarIte
                         <div className="absolute inset-0 rounded-md blur-md"></div>
 
                         {/* Content with Blending Mode */}
-                        <div className="relative text-white p-2">
-                            <Title level={5} className="leading-none !my-0">
+                        <div className="relative text-white! p-2">
+                            <Title level={5} className="leading-none text-white! my-0!">
                                 {featured.year} {featured.brand} {featured.model}
                             </Title>
-                            <Text type={'secondary'} className="leading-none !my-0">
+                            <Text type={'secondary'} className="leading-none  my-0!">
                                 {featured.mileage} KM · {featured.engine}
                             </Text>
                         </div>
@@ -72,15 +72,15 @@ export default function CarouselItem({featured}: { featured: CarAuction | CarIte
                 />
                 {"currentBid" in featured ? <div className="lg:hidden bg-dark flex gap-2 px-2 py-1 rounded-md max-w-max">
                     <span className="flex items-center gap-1">
-                        <Text className={'leading-none my-0'} type="secondary">
+                        <Text className={'text-white! leading-none my-0'} type="secondary">
                             <ClockCircleOutlined/>
                         </Text>
-                        <Text className="leading-none my-0 font-medium">{countDown}</Text>
+                        <Text className="text-white! leading-none my-0 font-medium">{countDown}</Text>
                     </span>
                     <span>
-                        <Text className={'leading-none my-0'} type="secondary">Bid</Text>
+                        <Text className={'text-white! leading-none my-0'} type="secondary">Bid</Text>
                         <Text
-                            className="leading-none my-0 font-medium"> KSH {toMoneyFormat( featured.currentBid, true)}</Text>
+                            className="text-white! leading-none my-0 font-medium"> KSH {toMoneyFormat( featured.currentBid, true)}</Text>
                     </span>
                 </div> : <div className="lg:hidden bg-dark flex gap-2 px-2 py-1 rounded-md max-w-max">
                         <span>
@@ -98,11 +98,11 @@ export default function CarouselItem({featured}: { featured: CarAuction | CarIte
                             <div className="absolute inset-0 rounded-md blur-md"></div>
 
                             {/* Content with Blending Mode */}
-                            <div className="relative text-white p-2">
-                                <Title level={5} className="leading-none !my-0">
+                            <div className="relative p-2">
+                                <Title level={5} className="leading-none text-white! my-0!">
                                     {featured.year} {featured.brand} {featured.model}
                                 </Title>
-                                <Text type={'secondary'} className="leading-none !my-0">
+                                <Text type={'secondary'} className="leading-none my-0!">
                                     {featured.mileage} KM · {featured.engine}
                                 </Text>
                             </div>
@@ -110,20 +110,20 @@ export default function CarouselItem({featured}: { featured: CarAuction | CarIte
                     </div>
                     {"currentBid" in featured ? <div className="max-lg:hidden bg-dark flex gap-2 px-2 py-1 rounded-md max-w-max">
                     <span className="flex items-center gap-1">
-                        <Text className={'leading-none my-0'} type="secondary">
+                        <Text className={'text-white! leading-none my-0'} type="secondary">
                             <ClockCircleOutlined/>
                         </Text>
-                        <Text className="leading-none my-0 font-medium">{countDown}</Text>
+                        <Text className=" text-white! leading-none my-0 font-medium">{countDown}</Text>
                     </span>
                         <span>
-                        <Text className={'leading-none my-0'} type="secondary">Bid</Text>
+                        <Text className={'text-white! leading-none my-0'} type="secondary">Bid</Text>
                         <Text
-                            className="leading-none my-0 font-medium"> KSH {toMoneyFormat( featured.currentBid, true)}</Text>
+                            className="text-white! leading-none my-0 font-medium"> KSH {toMoneyFormat( featured.currentBid, true)}</Text>
                     </span>
                     </div> : <div className=" max-lg:hidden bg-dark flex gap-2 px-2 py-1 rounded-md max-w-max">
                         <span>
                         <Text
-                            className="leading-none my-0 font-medium"> KSH {toMoneyFormat(featured.price, true)}</Text>
+                            className="text-white! leading-none my-0 font-medium"> KSH {toMoneyFormat(featured.price, true)}</Text>
                     </span>
                     </div>}
                 </div>

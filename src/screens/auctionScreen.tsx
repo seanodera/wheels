@@ -1,12 +1,11 @@
 import {useParams} from "react-router";
-import {useEffect, useMemo, useState} from "react";
+import {useEffect, useMemo, useRef, useState} from "react";
 import type {CarAuction, CarItem, Dealership, MiniDealership, User} from "@/types";
-import {Avatar, Button, Divider, InputNumber, Typography} from "antd";
+import {Avatar, Button, Divider, Empty, InputNumber, Typography} from "antd";
 import {startCase} from "lodash";
 import {
     ArrowUpOutlined,
     ClockCircleOutlined,
-    MessageOutlined,
     NotificationOutlined,
     PlusOutlined,
     SendOutlined,
@@ -14,14 +13,11 @@ import {
     UserOutlined
 } from "@ant-design/icons";
 import AuctionItem from "@/components/auctionItem.tsx";
-import {deduceTimingValues, toMoneyFormat} from "@/utils";
+import {deduceTimingValues, toMoneyFormat, trackVehicleView} from "@/utils";
 import {formatDate} from "date-fns";
 import {useAppDispatch, useAppSelector} from "@/store/hooks.ts";
-import {
-    clearCurrentAuction,
-    fetchAuctionsAsync,
-    setCurrentAuctionAsync
-} from "@/store/reducers/auctionSlice.ts";
+import {clearCurrentAuction, fetchAuctionsAsync, setCurrentAuctionAsync} from "@/store/reducers/auctionSlice.ts";
+import LoadingScreen from "@/components/navigation/loadingScreen.tsx";
 
 const {Title, Text, Paragraph} = Typography;
 
@@ -52,6 +48,9 @@ export default function AuctionScreen() {
     });
     const [myBid, setMyBid] = useState<number>(0);
     const [countDown, setCountDown] = useState("");
+    const [viewCount, setViewCount] = useState<number>(0);
+    const userId = useAppSelector((state) => state.authentication.user?.id ?? null);
+    const trackedVehicleId = useRef<string | null>(null);
     const listing = currentAuction;
 
     useEffect(() => {
@@ -67,6 +66,26 @@ export default function AuctionScreen() {
         if (!listing) return;
         setMyBid(Number(listing.currentBid) + 50000);
     }, [listing]);
+
+    useEffect(() => {
+        setViewCount(Number(listing?.views ?? 0));
+    }, [listing?.id, listing?.views]);
+
+    useEffect(() => {
+        if (!listing?.id || !listing?.sellerId) return;
+        if (trackedVehicleId.current === String(listing.id)) return;
+        trackedVehicleId.current = String(listing.id);
+
+        void trackVehicleView({
+            vehicleId: String(listing.id),
+            dealerId: String(listing.sellerId),
+            userId
+        }).then((nextViews) => {
+            if (typeof nextViews === "number") {
+                setViewCount(nextViews);
+            }
+        });
+    }, [listing?.id, listing?.sellerId, userId]);
 
     useEffect(() => {
         const updateCountdown = () => {
@@ -104,11 +123,11 @@ export default function AuctionScreen() {
     );
 
     if (currentAuctionLoading) {
-        return <div className="text-center py-10">Loading auction...</div>;
+        return <LoadingScreen/>;
     }
 
     if (!id || !listing) {
-        return <div className="text-center py-10">{error || "Invalid auction item"}</div>;
+        return <Empty description={error || "Invalid auction item"}/>;
     }
 
     console.log(listing);
@@ -161,7 +180,7 @@ export default function AuctionScreen() {
             </div>
             <div className={'grid grid-cols-1 lg:grid-cols-5 gap-8 py-8 '}>
                 <div className={'lg:col-span-3 space-y-8'}>
-                    <div className={'bg-dark-400/30 rounded-lg'}>
+                    <div className={'bg-white dark:bg-dark rounded-lg'}>
                         <div className={'p-8'}>
                             <div className={'grid grid-cols-2 lg:grid-cols-4 gap-4'}>
                                 <div>
@@ -181,12 +200,6 @@ export default function AuctionScreen() {
                                 <div>
                                     <Title className={'leading-none my-0! '} type={'secondary'} level={5}># Bids</Title>
                                     <Title className={'leading-none my-0!'} level={5}>{listing.bids? listing.bids.length : 0}</Title>
-                                </div>
-                                <div>
-                                    <Title className={'leading-none my-0! '} type={'secondary'} level={5}>
-                                        <MessageOutlined/> Comments
-                                    </Title>
-                                    <Title className={'leading-none my-0!'} level={5}>{listing.comments? listing.comments.length : 0}</Title>
                                 </div>
                             </div>
                             <div className={'flex flex-col lg:flex-row justify-between gap-4 py-4'}>
@@ -212,7 +225,7 @@ export default function AuctionScreen() {
                                             {formatDate(new Date(listing.ending), "eee, MMM dd hh:mm bb")}
                                         </Text>
                                         <Title level={5} className={'leading-none my-0! '}>Views</Title>
-                                        <Text className={'leading-none my-0!'}>{listing.views ?? 0}</Text>
+                                        <Text className={'leading-none my-0!'}>{viewCount}</Text>
                                         <Title level={5} className={'leading-none my-0! '}>Watching</Title>
                                         <Text className={'leading-none my-0!'}>{listing.favorites ?? 0}</Text>
                                     </div>
@@ -263,22 +276,23 @@ export default function AuctionScreen() {
                             </div>
                         )}
                     </div>
-                    <div>
+                    {relatedNewlyListed.length > 0 && (<div>
                         <Title className={'my-4!'} level={4}>New Listing</Title>
                         <div className={'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8'}>
                             {relatedNewlyListed.map((auction: CarAuction) => (
                                 <AuctionItem key={auction.id} listing={auction}/>
                             ))}
                         </div>
-                    </div>
+                    </div>)}
                 </div>
                 <div className={'col-span-2'}>
-                    <Title className={'my-4!'} level={4}>Auctions Ending Soon</Title>
-                    <div className={'grid grid-cols-1 md:grid-cols-2 gap-8 mb-8'}>
-                        {relatedEndingSoon.map((auction: CarAuction) => (
-                            <AuctionItem key={auction.id} listing={auction}/>
-                        ))}
-                    </div>
+                    {relatedEndingSoon.length > 0 && (<>
+                        <Title className={'my-4!'} level={4}>Auctions Ending Soon</Title>
+                        <div className={'grid grid-cols-1 md:grid-cols-2 gap-8 mb-8'}>
+                            {relatedEndingSoon.map((auction: CarAuction) => (
+                                <AuctionItem key={auction.id} listing={auction}/>
+                            ))}
+                        </div></>)}
 
                 </div>
             </div>

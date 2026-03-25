@@ -6,12 +6,12 @@ const { Title,Text } = Typography;
 
 export default function Footer() {
     return (
-        <div className="bg-dark-400/10 py-4 px-16">
+        <div className=" bg-primary dark:bg-dark pt-16 py-4 px-16">
             <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
                 {/* Logo Section */}
                 <div className="flex gap-2 items-center">
                     <Avatar shape="square" size="large" src={<LogoComponent className="text-primary" />} />
-                    <Title className="leading-none !my-0" level={4}>Wheela</Title>
+                    <Title className="leading-none my-0!" level={4}>Wheela</Title>
                 </div>
 
                 {/* How It Works */}
@@ -39,8 +39,8 @@ export default function Footer() {
                 <div></div>
             </div>
             <div className={'flex flex-col-reverse md:grid md:grid-cols-3 py-4 mt-8'}>
-                <div className={'leading-none mx-auto !my-0'}></div>
-                <Text className={'leading-none mx-auto !my-0 text-center'} type={'secondary'}>&copy; Copyright 2025 Wheela</Text>
+                <div className={'leading-none mx-auto my-0!'}></div>
+                <Text className={'leading-none mx-auto my-0! text-center'} type={'secondary'}>&copy; Copyright 2025 Wheela</Text>
                 <div className={'flex flex-col md:flex-row justify-end gap-2'}>
                     <FooterItem to={'/cookies'} className={'text-gray-500 hover:text-primary'} activeClassName={'text-white'}>Cookies
                         Policy</FooterItem>
@@ -72,7 +72,7 @@ function FooterItem({ to, children, className , activeClassName}: { to: string, 
     return (
         <Link to={to}>
             <Button
-                className={`transition-all duration-500 ${className} ${isActive? activeClassName : className} ${!className && isActive ? 'text-primary' : ''}`}
+                className={`transition-all duration-500 ${className} ${isActive? activeClassName : className} ${!className && isActive ? 'dark:text-primary! text-white!' : ''}`}
                 type="text"
             >
                 {children}

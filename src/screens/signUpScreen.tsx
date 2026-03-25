@@ -11,7 +11,7 @@ export default function SignUpScreen() {
     const dispatch = useAppDispatch();
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
-    const onFinish = async (values: { firstName: string; lastName: string; email: string; password: string; username: string }) => {
+    const onFinish = async (values: { firstName: string; lastName: string; email: string; password: string; }) => {
         setLoading(true);
         console.log('Received values:', values);
         await dispatch(asyncSignUp(values))
@@ -58,13 +58,6 @@ export default function SignUpScreen() {
                     </Form.Item>
                 </div>
                 <Form.Item
-                    name="username"
-                    label="Username"
-                    rules={[{ required: true, message: 'Please input your username!' }]}
-                >
-                    <Input placeholder="Enter your user name" />
-                </Form.Item>
-                <Form.Item
                     name="email"
                     label="Email"
                     rules={[{ required: true, message: 'Please input your email!' }, { type: 'email', message: 'Please enter a valid email!' }]}
@@ -96,7 +89,7 @@ export default function SignUpScreen() {
                     </Button>
                 </Form.Item>
                 <Form.Item className={'flex justify-center text-center'}>
-                    <Text className={'text-center'}>Already have an account? <Link className={'  !text-primary hover:!underline hover:!text-primary-600'} to={'/login'}>Log in</Link></Text>
+                    <Text className={'text-center'}>Already have an account? <Link className={'  text-primary! hover:underline! hover:text-primary-600!'} to={'/login'}>Log in</Link></Text>
                 </Form.Item>
             </Form>
         </div>

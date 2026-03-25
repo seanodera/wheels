@@ -1,4 +1,4 @@
-import {Tabs, Typography, Card, Avatar, Button, Empty} from "antd";
+import {Tabs, Typography, Avatar, Button, Empty} from "antd";
 import {useEffect, useState} from "react";
 import {useLocation, useNavigate} from "react-router";
 import {useAppDispatch, useAppSelector} from "@/store/hooks.ts";
@@ -8,8 +8,10 @@ import ListingComponent from "@/components/listingComponent.tsx";
 import {CarItem} from "@/types";
 import AuctionItem from "@/components/auctionItem.tsx";
 import {
-asyncFetchCompletedAuctions, asyncFetchUserAuctions,
-    asyncFetchWishlist
+    asyncFetchBiddingAuctions,
+    asyncFetchCompletedAuctions,
+    asyncFetchSavedVehicles,
+    asyncFetchWatchedAuctions
 } from "@/store/reducers/authenticationSlice.ts";
 import {isCarAuction} from "@/utils";
 
@@ -18,7 +20,7 @@ const {Title, Text} = Typography;
 export default function ProfileScreen() {
     const location = useLocation();
     const navigate = useNavigate();
-    const [activeTab, setActiveTab] = useState("active-listings");
+    const [activeTab, setActiveTab] = useState("saved-listings");
     const user = useAppSelector((state) => state.authentication.user);
     // Update active tab based on URL hash
     useEffect(() => {
@@ -35,9 +37,9 @@ export default function ProfileScreen() {
     const tabItems = [
         {key: "saved-listings", label: "Saved Listings", children: <SavedListings/>},
         {key: "saved-auctions", label: "Saved Auctions", children: <SavedAuctions/>},
-        {key: "your-auctions", label: "Your Auctions", children: <YourAuctions/>},
+        {key: "watched-auctions", label: "Watched Auctions", children: <WatchedAuctions/>},
+        {key: "bidding-auctions", label: "Bidding Auctions", children: <BiddingAuctions/>},
         {key: "completed-auctions", label: "Completed Auctions", children: <CompletedAuctions/>},
-        {key: "ongoing-bids", label: "Ongoing Bids", children: <OngoingBids/>},
     ];
     useEffect(() => {
         if (!user){
@@ -74,7 +76,7 @@ export default function ProfileScreen() {
                             <div><Text className={' leading-none !my-0 block'} type={'secondary'}>Joined {formatDate(user.createdAt,'MMM yyyy')}</Text></div>
                         </div>
                     </div>
-                    <Button type={'primary'} ghost>Edit Profile</Button>text-center
+                    <Button type={'primary'} ghost>Edit Profile</Button>
                 </div>
             </div>
             <Tabs className={'!sticky'} activeKey={activeTab} onChange={onTabChange} items={tabItems}/>
@@ -86,11 +88,11 @@ export default function ProfileScreen() {
 
 
 export function SavedListings() {
-    const listings = useAppSelector(state => state.authentication.wishlist);
+    const listings = useAppSelector(state => state.authentication.marketplace.savedVehicles);
     const dispatch = useAppDispatch();
     useEffect(() => {
         if (!listings){
-            dispatch(asyncFetchWishlist())
+            dispatch(asyncFetchSavedVehicles())
         }
     }, [dispatch, listings]);
     if (!listings){
@@ -103,11 +105,11 @@ export function SavedListings() {
 
 
 export function SavedAuctions() {
-    const listings = useAppSelector(state => state.authentication.wishlist);
+    const listings = useAppSelector(state => state.authentication.marketplace.savedVehicles);
     const dispatch = useAppDispatch();
     useEffect(() => {
         if (!listings){
-            dispatch(asyncFetchWishlist())
+            dispatch(asyncFetchSavedVehicles())
         }
     }, [dispatch, listings]);
     if (!listings){
@@ -118,15 +120,30 @@ export function SavedAuctions() {
     </div>;
 }
 
-export function YourAuctions() {
-    const auctions = useAppSelector(state => state.authentication.auctions);
+export function WatchedAuctions() {
+    const auctions = useAppSelector(state => state.authentication.marketplace.watchedAuctions);
     const dispatch = useAppDispatch();
     useEffect(() => {
         if (!auctions){
-            dispatch(asyncFetchUserAuctions())
+            dispatch(asyncFetchWatchedAuctions())
         }
     }, [auctions, dispatch]);
-    console.log(auctions);
+    if (!auctions){
+        return <Empty/>
+    }
+    return <div className={'grid grid-cols-5 gap-8'}>
+        {auctions.map((auction, index) => <AuctionItem listing={auction} key={index} />)}
+    </div>;
+}
+
+export function BiddingAuctions() {
+    const auctions = useAppSelector(state => state.authentication.marketplace.biddingAuctions);
+    const dispatch = useAppDispatch();
+    useEffect(() => {
+        if (!auctions){
+            dispatch(asyncFetchBiddingAuctions())
+        }
+    }, [auctions, dispatch]);
     if (!auctions){
         return <Empty/>
     }
@@ -136,7 +153,7 @@ export function YourAuctions() {
 }
 
 export function CompletedAuctions() {
-    const auctions = useAppSelector(state => state.authentication.completedAuctions)
+    const auctions = useAppSelector(state => state.authentication.marketplace.completedAuctions)
     const dispatch = useAppDispatch();
     useEffect(() => {
         if (!auctions){
@@ -149,8 +166,4 @@ export function CompletedAuctions() {
     return <div className={'grid grid-cols-5 gap-8'}>
         {auctions.map((auction, index) => <AuctionItem listing={auction} key={index} />)}
     </div>;
-}
-
-export function OngoingBids() {
-    return <Card title="Ongoing Bids">Your current bids will be shown here.</Card>;
 }

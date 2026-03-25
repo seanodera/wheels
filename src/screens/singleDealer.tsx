@@ -1,4 +1,4 @@
-import {Avatar, Typography} from "antd";
+import {Avatar, Empty, Typography} from "antd";
 import CustomCarousel from "@/components/customCarousel.tsx";
 import ListingComponent from "@/components/listingComponent.tsx";
 import {useEffect, useMemo, useState} from "react";
@@ -7,6 +7,7 @@ import type {CarAuction, CarItem, Dealership} from "@/types";
 import {isCarAuction, supabase} from "@/utils";
 import {keysToCamelCase} from "@/utils/caseConverter.ts";
 import AuctionItem from "@/components/auctionItem.tsx";
+import LoadingScreen from "@/components/navigation/loadingScreen.tsx";
 
 const {Title, Text, Paragraph} = Typography;
 
@@ -99,15 +100,11 @@ export default function SingleDealer() {
     const imageSet = useMemo(() => dealer?.images ?? [], [dealer?.images]);
 
     if (loading) {
-        return <div className={"px-4 lg:px-16 py-10"}>Loading dealer profile...</div>;
+        return <LoadingScreen/>;
     }
 
-    if (error) {
-        return <div className={"px-4 lg:px-16 py-10 text-red-500"}>{error}</div>;
-    }
-
-    if (!dealer) {
-        return <div className={"px-4 lg:px-16 py-10"}>No dealer found.</div>;
+    if (error || !dealer) {
+        return <Empty description={error || "Failed to load dealer profile"}/>;
     }
 
     return (
@@ -115,12 +112,12 @@ export default function SingleDealer() {
             <div>
                 <div className={'flex justify-between mb-4 mt-8'}>
                     <div>
-                        <Title level={1} className={'leading-none !my-0'}>{dealer.name}</Title>
-                        <Text className={'leading-none !my-0'}>
+                        <Title level={1} className={'leading-none my-0!'}>{dealer.name}</Title>
+                        <Text className={'leading-none my-0!'}>
                             {dealer.locations?.[0]?.subCounty}, {dealer.locations?.[0]?.county}
                         </Text>
                     </div>
-                    <Avatar className={' !h-16 !w-16'} size={'large'} src={dealer.profile} shape={'circle'}/>
+                    <Avatar className={' h-16! w-16!'} size={'large'} src={dealer.profile} shape={'circle'}/>
                 </div>
                 {imageSet.length > 0 && (
                     <CustomCarousel items={1}>
@@ -128,7 +125,7 @@ export default function SingleDealer() {
                             <img
                                 key={index}
                                 src={image}
-                                className={'w-full mb-4 object-cover object-center rounded-xl aspect-[20/7]'}
+                                className={'w-full mb-4 object-cover object-center rounded-xl aspect-20/7'}
                                 alt={image}
                             />
                         ))}
@@ -142,19 +139,19 @@ export default function SingleDealer() {
                 </div>
                 <div className={'space-y-4 flex flex-col justify-center items-end'}>
                     <div>
-                        <Title className={'!leading-none !my-0'}>{dealer.listingCount}</Title>
-                        <Text className={'!leading-none !mt-0 !mb-4'} type={'secondary'}>Listings</Text>
+                        <Title className={'leading-none! my-0!'}>{dealer.listingCount}</Title>
+                        <Text className={'leading-none! mt-0! mb-4!'} type={'secondary'}>Listings</Text>
 
-                        <Title className={'!leading-none !my-0'}>{dealer.soldCount}</Title>
-                        <Text className={'!leading-none !mt-0 !mb-4'} type={'secondary'}>Sold Vehicles</Text>
+                        <Title className={'leading-none! my-0!'}>{dealer.soldCount}</Title>
+                        <Text className={'leading-none! mt-0! mb-4!'} type={'secondary'}>Sold Vehicles</Text>
 
-                        <Title className={'leading-none! !my-0'}>{dealer.views}</Title>
-                        <Text className={'leading-none! !mt-0 !mb-4'} type={'secondary'}>Views</Text>
+                        <Title className={'leading-none! my-0!'}>{dealer.views}</Title>
+                        <Text className={'leading-none! mt-0! mb-4!'} type={'secondary'}>Views</Text>
                     </div>
                 </div>
             </div>
             <div className={'py-8 space-y-8'}>
-                <Title level={2} className={'leading-none !my-0'}>Listings</Title>
+                <Title level={2} className={'leading-none my-0!'}>Listings</Title>
                 {listings.length === 0 ? (
                     <Text type={"secondary"}>No listings available for this dealer yet.</Text>
                 ) : (

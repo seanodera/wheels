@@ -1,174 +1,157 @@
 import {createAsyncThunk, createSlice, type PayloadAction} from "@reduxjs/toolkit";
-import type {CarAuction, CarItem,  Profile} from "@/types";
+import type {CarAuction, CarItem, Profile} from "@/types";
 import {loginAsync} from "@/store/thunks/authenticationThunks/login.ts";
 import {asyncSignUp} from "@/store/thunks/authenticationThunks/signUp.ts";
-import {supabase} from "@/utils";
-import {keysToCamelCase} from "@/utils/caseConverter.ts";
+import {supabase} from "@/utils/supabase.ts";
+import {
+    fetchBiddingAuctionsByUserId,
+    fetchProfileByUserId,
+    fetchSavedVehiclesByUserId,
+    fetchWatchedAuctionsByUserId
+} from "@/utils/profileQueries.ts";
 
-// Define State Type
+interface MarketplaceState {
+    savedVehicles?: (CarItem | CarAuction)[];
+    watchedAuctions?: CarAuction[];
+    biddingAuctions?: CarAuction[];
+    completedAuctions?: CarAuction[];
+}
+
 interface AuthenticationState {
     user: Profile | null;
     listings?: CarItem[];
     archivedListings?: CarItem[];
-    wishlist?: (CarItem | CarAuction)[];
-    auctions?: CarAuction[];
-    userAuctions?: CarAuction[];
-    completedAuctions?: CarAuction[];
-    bids?: CarAuction[];
+    marketplace: MarketplaceState;
     onboardingRequired: boolean;
     redirectTo?: string | null;
     loading: boolean;
     error?: string | null;
 }
 
-// Initial State
+const emptyMarketplaceState = (): MarketplaceState => ({
+    savedVehicles: undefined,
+    watchedAuctions: undefined,
+    biddingAuctions: undefined,
+    completedAuctions: undefined,
+});
+
 const initialState: AuthenticationState = {
     user: null,
     listings: undefined,
     archivedListings: undefined,
-    wishlist: undefined,
-    auctions: undefined,
-    userAuctions: undefined,
-    completedAuctions: undefined,
-    bids: undefined,
+    marketplace: emptyMarketplaceState(),
     onboardingRequired: false,
     redirectTo: null,
     loading: false,
     error: null,
 };
 
-// const dealerToProfile = (dealer: Dealer): Profile => {
-//     const fallbackName = dealer.name?.trim() || dealer.email.split("@")[0] || "dealer";
-//     const firstName = dealer.firstName?.trim() || fallbackName.split(" ")[0] || fallbackName;
-//     const lastName = dealer.lastName?.trim() || fallbackName.split(" ").slice(1).join(" ");
-//     const username = firstName && lastName ? `${firstName} ${lastName}` : fallbackName;
-//
-//     return {
-//         id: dealer.id,
-//         email: dealer.email,
-//         username,
-//         firstName,
-//         lastName,
-//         phone: dealer.phone,
-//         profilePicture: dealer.profile,
-//         createdAt: new Date(),
-//         verification: {
-//             emailVerified: false,
-//             phoneVerified: false,
-//             kycVerified: false
-//         },
-//         preferences: {
-//             currency: "KES",
-//             language: "en",
-//             notifications: {
-//                 email: false,
-//                 sms: false,
-//                 push: false
-//             }
-//         },
-//         security: {
-//             twoFactorAuth: false,
-//             recentLogins: []
-//         }
-//     };
-// };
-
-const parseStoredProfile = (raw: string): Profile => {
-    const parsed = JSON.parse(raw) as Profile;
-    return {
-        ...parsed,
-        createdAt: new Date(parsed.createdAt).toISOString()
-    };
+const getCurrentUserId = async () => {
+    const response = await supabase.auth.getUser();
+    if (response.error) {
+        throw response.error;
+    }
+    return response.data.user?.id ?? null;
 };
 
-// Async Thunks
 export const autoLoginUser = createAsyncThunk<Profile, void, {rejectValue: string}>(
     "authentication/autoLogin",
     async (_, {rejectWithValue}) => {
         try {
-            const userData = localStorage.getItem("wheela_user");
-            if (!userData) {
+            const sessionResponse = await supabase.auth.getSession();
+            if (sessionResponse.error) {
+                return rejectWithValue(sessionResponse.error.message);
+            }
+
+            const userId = sessionResponse.data.session?.user?.id;
+            if (!userId) {
                 return rejectWithValue("No active session");
             }
 
-            return parseStoredProfile(userData);
+            const profile = await fetchProfileByUserId(userId);
+            if (!profile) {
+                return rejectWithValue("Profile not found");
+            }
+
+            return profile;
         } catch (error) {
             return rejectWithValue(error instanceof Error ? error.message : "Failed to auto-login");
         }
     }
 );
 
-// Keep these aliases for existing screen imports.
 export const asyncLoginUser = loginAsync;
 
-const normalizeListing = (input: unknown): CarItem =>
-    keysToCamelCase<CarItem>(input);
-const normalizeAuction = (input: unknown): CarAuction =>
-    keysToCamelCase<CarAuction>(input);
-
-// Fetch Listings
-
-
-// Fetch Wishlist (Saved Listings)
-export const asyncFetchWishlist = createAsyncThunk<(CarItem | CarAuction)[]>(
-    "authentication/fetchWishlist",
-    async () => {
-        const {data, error} = await supabase
-            .from("vehicles")
-            .select("*")
-            .eq("published", true)
-            .eq("type", "listing")
-            .order("created_at", {ascending: false})
-            .limit(9);
-
-        if (error || !Array.isArray(data)) {
-            return [];
+export const asyncFetchSavedVehicles = createAsyncThunk<(CarItem | CarAuction)[], void, {rejectValue: string}>(
+    "authentication/fetchSavedVehicles",
+    async (_, {rejectWithValue}) => {
+        try {
+            const userId = await getCurrentUserId();
+            if (!userId) {
+                return [];
+            }
+            return await fetchSavedVehiclesByUserId(userId);
+        } catch (error) {
+            return rejectWithValue(error instanceof Error ? error.message : "Failed to fetch saved vehicles");
         }
-
-        return data.map((listing) => normalizeListing(listing));
     }
 );
 
-export const asyncFetchUserAuctions = createAsyncThunk<CarAuction[]>(
-    "authentication/fetchUserAuctions",
-    async () => {
-        const {data, error} = await supabase
-            .from("vehicles")
-            .select("*")
-            .eq("published", true)
-            .eq("type", "auction")
-            .order("created_at", {ascending: false})
-            .limit(20);
-
-        if (error || !Array.isArray(data)) {
-            return [];
+export const asyncFetchWatchedAuctions = createAsyncThunk<CarAuction[], void, {rejectValue: string}>(
+    "authentication/fetchWatchedAuctions",
+    async (_, {rejectWithValue}) => {
+        try {
+            const userId = await getCurrentUserId();
+            if (!userId) {
+                return [];
+            }
+            return await fetchWatchedAuctionsByUserId(userId);
+        } catch (error) {
+            return rejectWithValue(error instanceof Error ? error.message : "Failed to fetch watched auctions");
         }
-
-        return data.map((auction) => normalizeAuction(auction));
     }
 );
 
-export const asyncFetchCompletedAuctions = createAsyncThunk<CarAuction[]>(
+export const asyncFetchBiddingAuctions = createAsyncThunk<CarAuction[], void, {rejectValue: string}>(
+    "authentication/fetchBiddingAuctions",
+    async (_, {rejectWithValue}) => {
+        try {
+            const userId = await getCurrentUserId();
+            if (!userId) {
+                return [];
+            }
+            return await fetchBiddingAuctionsByUserId(userId);
+        } catch (error) {
+            return rejectWithValue(error instanceof Error ? error.message : "Failed to fetch bidding auctions");
+        }
+    }
+);
+
+export const asyncFetchCompletedAuctions = createAsyncThunk<CarAuction[], void, {rejectValue: string}>(
     "authentication/fetchCompletedAuctions",
-    async () => {
-        const {data, error} = await supabase
-            .from("vehicles")
-            .select("*")
-            .eq("published", true)
-            .eq("type", "auction")
-            .eq("active", "sold")
-            .order("created_at", {ascending: false})
-            .limit(20);
-
-        if (error || !Array.isArray(data)) {
-            return [];
+    async (_, {rejectWithValue}) => {
+        try {
+            const userId = await getCurrentUserId();
+            if (!userId) {
+                return [];
+            }
+            return await fetchBiddingAuctionsByUserId(userId, {completedOnly: true});
+        } catch (error) {
+            return rejectWithValue(error instanceof Error ? error.message : "Failed to fetch completed auctions");
         }
-
-        return data.map((auction) => normalizeAuction(auction));
     }
 );
 
-// Slice
+export const asyncLogoutUser = createAsyncThunk<void, void, {rejectValue: string}>(
+    "authentication/logout",
+    async (_, {rejectWithValue}) => {
+        const response = await supabase.auth.signOut();
+        if (response.error) {
+            return rejectWithValue(response.error.message);
+        }
+    }
+);
+
 const authenticationSlice = createSlice({
     name: "authentication",
     initialState,
@@ -177,12 +160,11 @@ const authenticationSlice = createSlice({
             state.user = null;
             state.redirectTo = null;
             state.onboardingRequired = false;
-            localStorage.removeItem("wheela_user");
+            state.marketplace = emptyMarketplaceState();
         },
     },
     extraReducers: (builder) => {
         builder
-            // Auto Login
             .addCase(autoLoginUser.pending, (state) => {
                 state.loading = true;
                 state.error = null;
@@ -195,8 +177,6 @@ const authenticationSlice = createSlice({
                 state.loading = false;
                 state.error = action.payload as string;
             })
-
-            // Sign Up
             .addCase(asyncSignUp.pending, (state) => {
                 state.loading = true;
                 state.error = null;
@@ -205,50 +185,48 @@ const authenticationSlice = createSlice({
                 state.loading = false;
                 state.user = action.payload;
                 state.onboardingRequired = false;
-                state.redirectTo = '/login';
-                localStorage.setItem("wheela_user", JSON.stringify(action.payload));
+                state.redirectTo = "/login";
             })
             .addCase(asyncSignUp.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload as string;
             })
-
-            // Login
             .addCase(asyncLoginUser.pending, (state) => {
                 state.loading = true;
                 state.error = null;
             })
             .addCase(asyncLoginUser.fulfilled, (state, action) => {
-
                 state.loading = false;
                 state.user = action.payload.user;
                 state.onboardingRequired = action.payload.onboardingRequired;
                 state.redirectTo = action.payload.redirectTo;
-                localStorage.setItem("wheela_user", JSON.stringify(action.payload.user));
             })
             .addCase(asyncLoginUser.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload as string;
             })
-
-            // Wishlist
-            .addCase(asyncFetchWishlist.fulfilled, (state, action) => {
-                state.wishlist = action.payload;
+            .addCase(asyncLogoutUser.fulfilled, (state) => {
+                state.user = null;
+                state.redirectTo = null;
+                state.onboardingRequired = false;
+                state.marketplace = emptyMarketplaceState();
             })
-
-            // Auctions
-            .addCase(asyncFetchUserAuctions.fulfilled, (state, action: PayloadAction<CarAuction[]>) => {
-                state.auctions = action.payload;
-                state.userAuctions = action.payload;
+            .addCase(asyncFetchSavedVehicles.fulfilled, (state, action) => {
+                state.marketplace.savedVehicles = action.payload;
+            })
+            .addCase(asyncFetchWatchedAuctions.fulfilled, (state, action: PayloadAction<CarAuction[]>) => {
+                state.marketplace.watchedAuctions = action.payload;
+            })
+            .addCase(asyncFetchBiddingAuctions.fulfilled, (state, action: PayloadAction<CarAuction[]>) => {
+                state.marketplace.biddingAuctions = action.payload;
             })
             .addCase(asyncFetchCompletedAuctions.fulfilled, (state, action: PayloadAction<CarAuction[]>) => {
-                state.completedAuctions = action.payload;
+                state.marketplace.completedAuctions = action.payload;
             });
     },
 });
 
-// Actions & Reducer
-export const { logoutUser } = authenticationSlice.actions;
-export * from '@/store/thunks/authenticationThunks/signUp'
-export * from '@/store/thunks/authenticationThunks/login'
+export const {logoutUser} = authenticationSlice.actions;
+export * from "@/store/thunks/authenticationThunks/signUp";
+export * from "@/store/thunks/authenticationThunks/login";
 export default authenticationSlice.reducer;

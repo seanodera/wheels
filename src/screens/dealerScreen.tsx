@@ -22,7 +22,7 @@ export default function DealerScreen() {
         <DealerBanner/>
         <NewDealers/>
         <PopularDealers/>
-        <div className={'mx-auto max-w-5xl p-24 aspect-[20/8] rounded-lg bg-gradient-to-br from-primary-800 to-secondary-700 flex flex-col justify-center items-center space-y-6'}>
+        <div className={'mx-auto max-w-5xl p-24 aspect-20/8 rounded-lg bg-linear-to-br from-primary-800 to-secondary-700 flex flex-col justify-center items-center space-y-6'}>
             <Title level={1}>Are You A Dealer</Title>
             <Text>Join and sell your cars to more people and host auctions</Text>
             <Button size={'large'} type={'primary'} ghost>Join Us</Button>

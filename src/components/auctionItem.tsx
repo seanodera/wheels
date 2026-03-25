@@ -46,14 +46,14 @@ export default function AuctionItem({ listing }: { listing: CarAuction }) {
                 <img src={listing.images[0] || "/placeholder.jpg"} alt="" className="w-full h-full object-cover rounded-lg" />
                 <div className="absolute bottom-1 left-1 bg-dark flex gap-2 px-2 py-1 rounded-md">
                     <span className="flex items-center gap-1">
-                        <Text className={'leading-none my-0'} type="secondary">
+                        <Text className={'text-white! leading-none my-0'} type="secondary">
                             <ClockCircleOutlined />
                         </Text>
-                        <Text  className="leading-none my-0 font-medium">{countDown}</Text>
+                        <Text  className="text-white! leading-none my-0 font-medium">{countDown}</Text>
                     </span>
                     <span>
-                        <Text className={'leading-none my-0'} type="secondary">Bid</Text>
-                        <Text className="leading-none my-0 font-medium"> KSH {toMoneyFormat(listing.currentBid, true)}</Text>
+                        <Text className={'text-white! leading-none my-0'} type="secondary">Bid</Text>
+                        <Text className=" text-white! leading-none my-0 font-medium"> KSH {toMoneyFormat(listing.currentBid, true)}</Text>
                     </span>
                 </div>
             </div>

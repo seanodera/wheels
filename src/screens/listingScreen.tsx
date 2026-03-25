@@ -1,4 +1,4 @@
-import {Avatar, Button, Divider, InputNumber, Typography} from "antd";
+import {Avatar, Button, Divider, Empty, InputNumber, Typography} from "antd";
 import {
     ArrowUpOutlined,
     ClockCircleOutlined,
@@ -8,12 +8,12 @@ import {
     StarOutlined, UserOutlined
 } from "@ant-design/icons";
 import {CarItem, Dealership, MiniDealership} from "@/types";
-import {toMoneyFormat} from "@/utils";
+import {toMoneyFormat, trackVehicleView} from "@/utils";
 import {formatDate} from "date-fns";
 import AuctionItem from "@/components/auctionItem.tsx";
 import {AuctionDescription} from "@/screens/auctionScreen.tsx";
 import {Link, useParams} from "react-router";
-import {useEffect, useState} from "react";
+import {useEffect, useRef, useState} from "react";
 import ListingComponent from "@/components/listingComponent.tsx";
 import {useAppDispatch, useAppSelector} from "@/store/hooks.ts";
 import {clearCurrentListing, fetchListingAsync, fetchListingByIdAsync} from "@/store/reducers/listingSlice.ts";
@@ -31,7 +31,10 @@ export default function ListingScreen() {
     } = useAppSelector((state) => state.listing);
     const auctions = useAppSelector((state) => state.auction.endingSoon);
     const [myBid, setMyBid] = useState<number>(0);
-    const listing: CarItem | undefined  = currentListing;
+    const [viewCount, setViewCount] = useState<number>(0);
+    const userId = useAppSelector((state) => state.authentication.user?.id ?? null);
+    const trackedVehicleId = useRef<string | null>(null);
+    const listing: CarItem | undefined = currentListing;
 
     useEffect(() => {
         if (!id) {
@@ -53,12 +56,32 @@ export default function ListingScreen() {
         }
     }, [listing]);
 
+    useEffect(() => {
+        setViewCount(Number(listing?.views ?? 0));
+    }, [listing?.id, listing?.views]);
+
+    useEffect(() => {
+        if (!listing?.id || !listing?.sellerId) return;
+        if (trackedVehicleId.current === String(listing.id)) return;
+        trackedVehicleId.current = String(listing.id);
+
+        void trackVehicleView({
+            vehicleId: String(listing.id),
+            dealerId: String(listing.sellerId),
+            userId
+        }).then((nextViews) => {
+            if (typeof nextViews === "number") {
+                setViewCount(nextViews);
+            }
+        });
+    }, [listing?.id, listing?.sellerId, userId]);
+
     if (currentListingLoading) {
         return <LoadingScreen/>;
     }
 
     if (!id || !listing) {
-        return <div className="text-center py-10">Invalid listing item</div>;
+        return <Empty description={'No listing found'}/>;
     }
     return <div className="py-4 px-4 lg:px-16 text-current">
         <div className={'flex justify-between items-center w-full pb-4'}>
@@ -77,7 +100,7 @@ export default function ListingScreen() {
             <div className="col-span-3 row-span-4 relative">
                 {/* Main Image */}
                 <img
-                    src={listing.images[ 0 ] || "/placeholder.jpg"}
+                    src={listing.images[0] || "/placeholder.jpg"}
                     className="w-full h-full object-cover rounded-lg aspect-video"
                     alt={`${listing.brand} ${listing.model}`}
                 />
@@ -92,7 +115,7 @@ export default function ListingScreen() {
                 />
             ))}
             {listing.images.length > 8 && <div className={'w-full h-full object-cover rounded-lg aspect-video bg-cover'}
-                  style={{backgroundImage: `url("${listing.images[ 9 ]}")`}}>
+                                               style={{backgroundImage: `url("${listing.images[9]}")`}}>
                 <div className={'w-full h-full flex flex-col justify-center items-center rounded-lg bg-dark/70'}>
                     <Title level={4}>{listing.images.length - 8} More Images</Title>
                     <Button className={'aspect-square'} type={'text'} variant={'outlined'} ghost
@@ -141,15 +164,16 @@ export default function ListingScreen() {
                                     </Text>
                                     <Title level={5} className={'leading-none my-0! '}>Views</Title>
                                     <Text
-                                        className={'leading-none my-0!'}> {600}</Text>
+                                        className={'leading-none my-0!'}>{viewCount}</Text>
                                     <Title level={5} className={'leading-none my-0! '}>Watching</Title>
                                     <Text
-                                        className={'leading-none my-0!'}>{50}</Text>
+                                        className={'leading-none my-0!'}>{listing.favorites ?? 0}</Text>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div className="bg-dark-400 rounded-b-lg p-8 flex flex-col md:flex-row justify-between gap-2 items-center">
+                    <div
+                        className="bg-dark-400 rounded-b-lg p-8 flex flex-col md:flex-row justify-between gap-2 items-center">
                         <Title level={5}>Make an Offer</Title>
                         <div className={'flex gap-2 items-center'}>
                             <InputNumber
@@ -182,8 +206,8 @@ export default function ListingScreen() {
                         <div>
                             <Title level={4}>Videos</Title>
                             <div className="grid grid-cols-2 gap-4">
-                                {listing.video.map((video:string, index:number) => {
-                                    const videoId = video.split("v=")[ 1 ]?.split("&")[ 0 ]; // Extract YouTube video ID
+                                {listing.video.map((video: string, index: number) => {
+                                    const videoId = video.split("v=")[1]?.split("&")[0]; // Extract YouTube video ID
                                     return (
                                         <a
                                             key={index}
@@ -230,7 +254,8 @@ export default function ListingScreen() {
 
 export function DealerComponent({dealer}: { dealer: MiniDealership | Dealership }) {
 
-    return (<Link to={`/dealers/${dealer.id}`} className={'flex flex-col items-center justify-center gap-2 bg-dark-400/50 hover:bg-dark-400/70 cursor-alias rounded-xl p-8'}>
+    return (<Link to={`/dealers/${dealer.id}`}
+                  className={'flex flex-col items-center justify-center gap-2 bg-dark-400/50 hover:bg-dark-400/70 cursor-alias rounded-xl p-8'}>
         <Title level={3}>Dealer Profile</Title>
         <Avatar size={'large'} className={'h-20! w-20!'} src={dealer.profile} shape={'circle'}/>
         <Title level={5}>{dealer.name}</Title>

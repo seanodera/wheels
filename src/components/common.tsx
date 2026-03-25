@@ -21,7 +21,7 @@ export function CustomButton({className = "", children, to = '#'}: {
 export function HighlightBackground({className = "", children}: { className?: string; children: ReactNode }) {
     return (
         <span
-            className={`px-2 py-1 rounded-lg border-primary border-solid border-s-4 border-b-4 border-e-2 border-t-2 ${className}`}
+            className={`px-2 py-1 rounded-lg border-primary border-solid text-white! border-s-4 border-b-4 border-e-2 border-t-2 ${className}`}
         >
       {children}
     </span>
