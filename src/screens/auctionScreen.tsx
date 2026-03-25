@@ -1,6 +1,6 @@
 import {useParams} from "react-router";
 import {useEffect, useMemo, useState} from "react";
-import type {CarAuction, CarItem, Dealer, MiniDealer, User} from "@/types";
+import type {CarAuction, CarItem, Dealership, MiniDealership, User} from "@/types";
 import {Avatar, Button, Divider, InputNumber, Typography} from "antd";
 import {startCase} from "lodash";
 import {
@@ -25,7 +25,7 @@ import {
 
 const {Title, Text, Paragraph} = Typography;
 
-const sellerDisplayName = (seller: User | Dealer | MiniDealer) => {
+const sellerDisplayName = (seller: User | Dealership | MiniDealership) => {
     if ("username" in seller && seller.username) return seller.username;
     if ("name" in seller && seller.name) return seller.name;
     return seller.name;

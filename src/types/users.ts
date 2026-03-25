@@ -13,7 +13,7 @@ export interface CommentItem {
     replies?: CommentItem[];
 }
 
-export interface MiniDealer{
+export interface MiniDealership{
     id: string;
     name: string;
     profile?: string;
@@ -22,31 +22,33 @@ export interface MiniDealer{
     views: number;
 }
 
-export interface Dealer {
-    id: string;
-    accountType: "individual" | "company";
-    name: string;
-    firstName?: string;
-    lastName?: string;
-    email: string;
-    profile?: string;
-    phone: string;
-    rating: string;
-    reviews: CommentItem[];
-    images: string[];
-    description: string;
-    listingCount: number;
-    auctionCount: number;
-    soldCount: number;
-    views: number;
-    location: {
-        latitude: number;
-        longitude: number;
-        street: string;
-        city: string;
-        state: string;
-        country: string;
-        location: string;
-        district: string;
-    };
-}
+export type MiniDealer = MiniDealership;
+//
+// export interface Dealer {
+//     id: string;
+//     accountType: "individual" | "company";
+//     name: string;
+//     firstName?: string;
+//     lastName?: string;
+//     email: string;
+//     profile?: string;
+//     phone: string;
+//     rating: string;
+//     reviews: CommentItem[];
+//     images: string[];
+//     description: string;
+//     listingCount: number;
+//     auctionCount: number;
+//     soldCount: number;
+//     views: number;
+//     location: {
+//         latitude: number;
+//         longitude: number;
+//         street: string;
+//         city: string;
+//         state: string;
+//         country: string;
+//         location: string;
+//         district: string;
+//     };
+// }

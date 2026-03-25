@@ -77,25 +77,30 @@ function App() {
                         },
                     }}
         >
-           <ErrorBoundary>
-               <AntApp>
+            <div className={'bg-light-bg dark:text-white dark:bg-dark-bg h-screen transition-colors'}>
 
-                   <Routes>
-                       <Route element={<MainShell/>}>
-                           <Route path={'/'} element={<HomeScreen/>}/>
-                           <Route path={'/dealers'} element={<DealerScreen/>}/>
-                           <Route path={'/dealers/:id'} element={<SingleDealer/>}/>
-                           <Route path={'/auction/:id'} element={<AuctionScreen/>}/>
-                           <Route path={'/auctions'} element={<AuctionsScreen/>}/>
-                           <Route path={'/listings'} element={<ListingsScreen/>}/>
-                           <Route path={'/listing/:id'} element={<ListingScreen/>}/>
-                           <Route path={'/profile'} element={<ProfileScreen/>}/>
-                       </Route>
-                       <Route path={'/login'} element={<LoginScreen/>}/>
-                       <Route path={'/sign-up'} element={<SignUpScreen/>}/>
-                   </Routes>
-               </AntApp>
-           </ErrorBoundary>
+                <ErrorBoundary>
+
+                    <AntApp>
+
+                        <Routes>
+                            <Route element={<MainShell/>}>
+                                <Route path={'/'} element={<HomeScreen/>}/>
+                                <Route path={'/dealers'} element={<DealerScreen/>}/>
+                                <Route path={'/dealers/:id'} element={<SingleDealer/>}/>
+                                <Route path={'/auction/:id'} element={<AuctionScreen/>}/>
+                                <Route path={'/auctions'} element={<AuctionsScreen/>}/>
+                                <Route path={'/listings'} element={<ListingsScreen/>}/>
+                                <Route path={'/listing/:id'} element={<ListingScreen/>}/>
+                                <Route path={'/profile'} element={<ProfileScreen/>}/>
+                            </Route>
+                            <Route path={'/login'} element={<LoginScreen/>}/>
+                            <Route path={'/sign-up'} element={<SignUpScreen/>}/>
+                        </Routes>
+                    </AntApp>
+
+                </ErrorBoundary>
+            </div>
 
         </ConfigProvider>
     )

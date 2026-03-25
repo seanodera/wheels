@@ -7,7 +7,7 @@ import {
     SendOutlined,
     StarOutlined, UserOutlined
 } from "@ant-design/icons";
-import {CarItem, Dealer, MiniDealer} from "@/types";
+import {CarItem, Dealership, MiniDealership} from "@/types";
 import {toMoneyFormat} from "@/utils";
 import {formatDate} from "date-fns";
 import AuctionItem from "@/components/auctionItem.tsx";
@@ -228,7 +228,7 @@ export default function ListingScreen() {
     </div>
 }
 
-export function DealerComponent({dealer}: { dealer: MiniDealer | Dealer }) {
+export function DealerComponent({dealer}: { dealer: MiniDealership | Dealership }) {
 
     return (<Link to={`/dealers/${dealer.id}`} className={'flex flex-col items-center justify-center gap-2 bg-dark-400/50 hover:bg-dark-400/70 cursor-alias rounded-xl p-8'}>
         <Title level={3}>Dealer Profile</Title>

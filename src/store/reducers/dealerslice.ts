@@ -1,10 +1,10 @@
 import {createSlice} from "@reduxjs/toolkit";
-import {Dealer} from "@/types";
+import type {Dealership} from "@/types";
 
 
 export interface DealerState {
-    dealers: Dealer[],
-    currentDealer?: Dealer,
+    dealers: Dealership[],
+    currentDealer?: Dealership,
     loading: boolean,
     hasError: boolean,
     errorMessage?: string

@@ -1,11 +1,11 @@
 import {useState} from "react";
-import {AutoComplete, Avatar, Button, Typography, Drawer} from "antd";
+import {AutoComplete, Avatar, Button, Drawer, Segmented, Typography} from "antd";
 import {Link} from "react-router";
 import {motion} from "framer-motion";
 import LogoComponent from "@/assets/logoComponent.tsx";
-import {useAppSelector} from "@/store/hooks.ts";
-import {UserOutlined, MenuOutlined, CloseOutlined, SearchOutlined} from "@ant-design/icons";
-import {supabase} from "@/utils";
+import {useAppDispatch, useAppSelector} from "@/store/hooks.ts";
+import {CloseOutlined, MenuOutlined, MoonOutlined, SearchOutlined, SunOutlined, UserOutlined} from "@ant-design/icons";
+import {setTheme} from "@/store";
 
 const {Title} = Typography;
 
@@ -25,6 +25,8 @@ export default function Navbar() {
     const [options, setOptions] = useState(carOptions);
     const [isSearchOpen, setIsSearchOpen] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const dispatch = useAppDispatch();
+    const {theme} = useAppSelector(state => state.main)
     const user = useAppSelector((state) => state.authentication.user);
 
     const handleSearch = (value: string) => {
@@ -35,24 +37,6 @@ export default function Navbar() {
         }
     };
 
-    async function dataTester() {
-        try {
-            const response = await supabase
-                .from("vehicles")
-                .select("*, listing:listings(*),auction:auctions(*)")
-                .eq('id','srDF1nEyPJj6TyGnRktoh')
-                .maybeSingle()
-            if (response.error) {
-                console.error("Error fetching data:", response.error);
-            }
-            if (response.data) {
-                console.info("Data fetched successfully:", response.data);
-            }
-            console.log(response);
-        } catch (error) {
-            console.error("Error fetching data:", error);
-        }
-    }
 
     return (
         <>
@@ -69,7 +53,7 @@ export default function Navbar() {
 
                     {/* Desktop Navigation */}
                     <div className="hidden md:flex gap-2 items-center">
-                        <Button onClick={dataTester} type={'primary'}>Test</Button>
+
                         <NavbarItem to="/auctions">Auctions</NavbarItem>
                         <NavbarItem to="/listings">Listings</NavbarItem>
                         <NavbarItem to="/dealers">Dealers</NavbarItem>
@@ -97,17 +81,37 @@ export default function Navbar() {
 
                     {/* User Profile / Login */}
                     {user ? (
-                        <Link to="/profile" className="hidden md:flex gap-2 items-center">
-                            <div>
-                                <Title className="!leading-none !my-0"
-                                       level={5}>{user.firstName} {user.lastName}</Title>
-                                {/*<Text className="!leading-none !my-0" type="secondary">{user.name}</Text>*/}
-                            </div>
-                            <Avatar src={user.profilePicture} icon={!user.profilePicture && <UserOutlined/>}
-                                    size="large" shape="circle"/>
-                        </Link>
+                        <div className={'hidden md:flex gap-2'}>
+                            <Segmented
+                                onChange={(value) => dispatch(setTheme(value as "light" | "dark"))}
+                                shape="round"
+                                options={[
+                                    {value: "light", icon: <SunOutlined/>},
+                                    {value: "dark", icon: <MoonOutlined/>},
+                                ]}
+                                value={theme}
+                            />
+                            <Link to="/profile" className="hidden md:flex gap-2 items-center">
+                                <div>
+                                    <Title className="leading-none! my-0!"
+                                           level={5}>{user.firstName} {user.lastName}</Title>
+                                    {/*<Text className="!leading-none !my-0" type="secondary">{user.name}</Text>*/}
+                                </div>
+                                <Avatar src={user.profilePicture} icon={!user.profilePicture && <UserOutlined/>}
+                                        size="large" shape="circle"/>
+                            </Link>
+                        </div>
                     ) : (
                         <div className="hidden md:flex gap-2">
+                            <Segmented
+                                onChange={(value) => dispatch(setTheme(value as "light" | "dark"))}
+                                shape="round"
+                                options={[
+                                    {value: "light", icon: <SunOutlined/>},
+                                    {value: "dark", icon: <MoonOutlined/>},
+                                ]}
+                                value={theme}
+                            />
                             <Link to="/login"><Button size="large" type="primary">Login</Button></Link>
                             <Link to="/sign-up"><Button size="large" type="primary" ghost>Sign up</Button></Link>
                         </div>

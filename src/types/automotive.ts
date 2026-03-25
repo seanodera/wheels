@@ -1,4 +1,5 @@
-import type {CommentItem, Dealer, MiniDealer, User} from "./users";
+import type {CommentItem, MiniDealership, User} from "./users";
+import type {Dealership} from "@/types/dealership.ts";
 
 export interface CarDescription {
     general: string;
@@ -60,15 +61,19 @@ export interface BaseCar {
     verified?: boolean;
     featured?: boolean;
     views?: number;
+    leadCount?: number;
+    watchCount?: number;
     favorites?: number;
     comments?: CommentItem[];
     description: CarDescription;
     video: string[];
     tags: string[];
     createdAt: string;
-    seller: MiniDealer | Dealer;
+    seller: MiniDealership | Dealership;
+    isDealership?: boolean;
     isDealer?: boolean;
-    active?: "active" | "inactive" | "sold" | "pending" | "expired" | "live";
+    published?:boolean;
+    active?: "active" | "inactive" | "sold" | "pending" | "expired" | "live" | "draft";
     sellerId: string;
 }
 

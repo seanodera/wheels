@@ -54,7 +54,8 @@ export const fetchAuctionsAsync = createAsyncThunk<CarAuction[], void, { rejectV
         try {
             const response = await supabase
                 .from("auctions")
-                .select("*, vehicle:vehicles(*, seller:dealers(*)")
+                .select("*, vehicle:vehicles!inner(*, seller:dealerships(*))")
+                .eq("vehicle.published", true)
                 .order("created_at", {ascending: false});
 
             if (response.error) {
@@ -77,7 +78,8 @@ export const fetchAuctionByIdAsync = createAsyncThunk<CarAuction, string, { reje
         try {
             const response = await supabase
                 .from("auctions")
-                .select("*, vehicle:vehicles(*, seller:dealers(*)")
+                .select("*, vehicle:vehicles!inner(*, seller:dealerships(*))")
+                .eq("vehicle.published", true)
                 .eq("vehicle_id", id)
                 .maybeSingle();
 
@@ -110,7 +112,8 @@ export const setCurrentAuctionAsync = createAsyncThunk<CarAuction, string, { rej
 
             const response = await supabase
                 .from("auctions")
-                .select("*, vehicle:vehicles(*, seller:dealers(*))")
+                .select("*, vehicle:vehicles!inner(*, seller:dealerships(*))")
+                .eq("vehicle.published", true)
                 .eq("vehicle_id", id)
                 .maybeSingle();
 

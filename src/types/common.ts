@@ -67,3 +67,15 @@ export interface Conversation {
 
     updatedAt: string;
 }
+
+export interface Location {
+    country: string;
+    county: string;
+    subCounty: string;
+    area: string;
+    street: string;
+    building?: string;
+    latitude: number;
+    longitude: number;
+    name?: string;
+}

@@ -17,7 +17,7 @@ export default function MainShell() {
     if (loading) {
         return <div>Loading...</div>
     }
-    return <div className={'bg-dark-700 min-h-screen w-screen'}>
+    return <div className={'min-h-screen h-full bg-gray-50 transition-all duration-300 dark:bg-dark-bg'}>
         <Navbar/>
         <Outlet/>
         <Footer/>

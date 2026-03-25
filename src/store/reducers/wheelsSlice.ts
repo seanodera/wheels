@@ -1,4 +1,4 @@
-import type {CarAuction, CarItem, Dealer} from "@/types";
+import type {CarAuction, CarItem, Dealership} from "@/types";
 import {createAsyncThunk, createSlice} from "@reduxjs/toolkit";
 import {keysToCamelCase} from "@/utils/caseConverter.ts";
 import {isCarAuction, supabase} from "@/utils";
@@ -10,9 +10,9 @@ interface WheelsState {
     featuredListings: (CarItem | CarAuction)[];
     auctionsEndingSoon: CarAuction[];
     newListings: (CarItem | CarAuction)[];
-    newDealers: Dealer[];
+    newDealers: Dealership[];
     popularListings: CarItem[];
-    popularDealers: Dealer[];
+    popularDealers: Dealership[];
     loading: boolean;
     hasError: boolean;
     errorMessage: string | null;
@@ -34,13 +34,13 @@ type HomeCuratedPayload = {
     featured_listings: (CarItem | CarAuction)[];
     ending_soon: CarAuction[];
     new_listings:(CarItem | CarAuction)[];
-    new_dealers: Dealer[];
+    new_dealers: Dealership[];
     popular_listings: CarItem[];
-    popular_dealers: Dealer[];
+    popular_dealers: Dealership[];
 };
 
 
-const toDealer = (value: unknown): Dealer => keysToCamelCase<Dealer>(value);
+const toDealership = (value: unknown): Dealership => keysToCamelCase<Dealership>(value);
 const isAuctionLike = (value: unknown) => {
     if (!value || typeof value !== "object") return false;
     const record = value as Record<string, unknown>;
@@ -62,10 +62,16 @@ export const fetchHomeData = createAsyncThunk<HomeCuratedPayload, void, {rejectV
                     .from("vehicles")
                     .select("*")
                     .in("type", ["listing", "auction"])
+                    .eq("published", true)
                     .eq("featured", true)
                     .order("created_at", {ascending: false})
                     .limit(10),
-                supabase.from('auctions').select("*, vehicle:vehicles(*, seller:dealers(*))").order('ending', {ascending: true}).limit(10),
+                supabase
+                    .from("auctions")
+                    .select("*, vehicle:vehicles!inner(*, seller:dealerships(*))")
+                    .eq("vehicle.published", true)
+                    .order("ending", {ascending: true})
+                    .limit(10),
                 supabase
                     .from("newly_listed_feed")
                     .select("*")
@@ -73,16 +79,17 @@ export const fetchHomeData = createAsyncThunk<HomeCuratedPayload, void, {rejectV
                     .limit(10),
                 supabase
                     .from("listings")
-                    .select("*, vehicle:vehicles(*, seller:dealers(*))")
+                    .select("*, vehicle:vehicles!inner(*, seller:dealerships(*))")
+                    .eq("vehicle.published", true)
                     .order("views", {ascending: false, referencedTable: 'vehicles'})
                     .limit(10),
                 supabase
-                    .from("dealers")
+                    .from("dealerships")
                     .select("*")
                     .order("created_at", {ascending: false})
                     .limit(8),
                 supabase
-                    .from("dealers")
+                    .from("dealerships")
                     .select("*")
                     .order("views", {ascending: false})
                     .limit(8)
@@ -116,8 +123,8 @@ export const fetchHomeData = createAsyncThunk<HomeCuratedPayload, void, {rejectV
             const endingSoon = (endingSoonResponse.data ?? []).map(toCarAuction);
             const newListings = (newListingsResponse.data ?? []).map((item) => isCarAuction(item)? toCarAuction(item) :toCarItem(item));
             const popularListings = (popularListingsResponse.data ?? []).map(toCarItem);
-            const newDealers = (newDealersResponse.data ?? []).map(toDealer);
-            const popularDealers = (popularDealersResponse.data ?? []).map(toDealer);
+            const newDealers = (newDealersResponse.data ?? []).map(toDealership);
+            const popularDealers = (popularDealersResponse.data ?? []).map(toDealership);
             dispatch(setEndingSoon(endingSoon))
             return {
                 featured_listings: featuredListings,

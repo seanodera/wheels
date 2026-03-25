@@ -3,7 +3,7 @@ import CustomCarousel from "@/components/customCarousel.tsx";
 import ListingComponent from "@/components/listingComponent.tsx";
 import {useEffect, useMemo, useState} from "react";
 import {useParams} from "react-router";
-import type {CarAuction, CarItem, Dealer} from "@/types";
+import type {CarAuction, CarItem, Dealership} from "@/types";
 import {isCarAuction, supabase} from "@/utils";
 import {keysToCamelCase} from "@/utils/caseConverter.ts";
 import AuctionItem from "@/components/auctionItem.tsx";
@@ -12,7 +12,7 @@ const {Title, Text, Paragraph} = Typography;
 
 export default function SingleDealer() {
     const {id} = useParams<{ id: string }>();
-    const [dealer, setDealer] = useState<Dealer | null>(null);
+    const [dealer, setDealer] = useState<Dealership | null>(null);
     const [listings, setListings] = useState<(CarItem | CarAuction)[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -29,13 +29,14 @@ export default function SingleDealer() {
             try {
                 const [dealerResponse, listingsResponse] = await Promise.all([
                     supabase
-                        .from("dealers")
+                        .from("dealerships")
                         .select("*")
                         .eq("id", id)
                         .maybeSingle(),
                     supabase
                         .from("vehicles")
                         .select("*,auction:auctions(*), listing:listings(*)")
+                        .eq("published", true)
                         .eq("seller_id", id)
                         .order("created_at", {ascending: false})
                         .limit(16)
@@ -56,7 +57,7 @@ export default function SingleDealer() {
                     return;
                 }
 
-                setDealer(keysToCamelCase<Dealer>(dealerResponse.data));
+                setDealer(keysToCamelCase<Dealership>(dealerResponse.data));
 
                 const data = (listingsResponse.data ?? [])
                     .map((listing) => {
@@ -116,7 +117,7 @@ export default function SingleDealer() {
                     <div>
                         <Title level={1} className={'leading-none !my-0'}>{dealer.name}</Title>
                         <Text className={'leading-none !my-0'}>
-                            {dealer.location?.district}, {dealer.location?.city}
+                            {dealer.locations?.[0]?.subCounty}, {dealer.locations?.[0]?.county}
                         </Text>
                     </div>
                     <Avatar className={' !h-16 !w-16'} size={'large'} src={dealer.profile} shape={'circle'}/>

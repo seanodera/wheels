@@ -116,6 +116,7 @@ export const asyncFetchWishlist = createAsyncThunk<(CarItem | CarAuction)[]>(
         const {data, error} = await supabase
             .from("vehicles")
             .select("*")
+            .eq("published", true)
             .eq("type", "listing")
             .order("created_at", {ascending: false})
             .limit(9);
@@ -134,6 +135,7 @@ export const asyncFetchUserAuctions = createAsyncThunk<CarAuction[]>(
         const {data, error} = await supabase
             .from("vehicles")
             .select("*")
+            .eq("published", true)
             .eq("type", "auction")
             .order("created_at", {ascending: false})
             .limit(20);
@@ -152,6 +154,7 @@ export const asyncFetchCompletedAuctions = createAsyncThunk<CarAuction[]>(
         const {data, error} = await supabase
             .from("vehicles")
             .select("*")
+            .eq("published", true)
             .eq("type", "auction")
             .eq("active", "sold")
             .order("created_at", {ascending: false})
