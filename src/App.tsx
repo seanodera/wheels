@@ -17,6 +17,7 @@ import {useThemeManager} from "@/utils/useThemeManager.ts";
 import {useLocation} from "react-router";
 import {useEffect, useState} from "react";
 import LoadingScreen from "@/components/navigation/loadingScreen.tsx";
+import MessagesScreen from "@/screens/messages.tsx";
 
 function App() {
     const currentTheme = useThemeManager();
@@ -77,26 +78,28 @@ function App() {
                         },
                     }}
         >
-            <div className={'bg-light-bg dark:text-white dark:bg-dark-bg h-screen transition-colors'}>
+            <div className={'bg-light-bg dark:text-white h-screen dark:bg-dark-bg transition-colors'}>
 
                 <ErrorBoundary>
 
                     <AntApp>
-
-                        <Routes>
-                            <Route element={<MainShell/>}>
-                                <Route path={'/'} element={<HomeScreen/>}/>
-                                <Route path={'/dealers'} element={<DealerScreen/>}/>
-                                <Route path={'/dealers/:id'} element={<SingleDealer/>}/>
-                                <Route path={'/auction/:id'} element={<AuctionScreen/>}/>
-                                <Route path={'/auctions'} element={<AuctionsScreen/>}/>
-                                <Route path={'/listings'} element={<ListingsScreen/>}/>
-                                <Route path={'/listing/:id'} element={<ListingScreen/>}/>
-                                <Route path={'/profile'} element={<ProfileScreen/>}/>
-                            </Route>
-                            <Route path={'/login'} element={<LoginScreen/>}/>
-                            <Route path={'/sign-up'} element={<SignUpScreen/>}/>
-                        </Routes>
+                        <div className={'h-screen'}>
+                            <Routes>
+                                <Route element={<MainShell/>}>
+                                    <Route path={'/messages'} element={<MessagesScreen/>}/>
+                                    <Route path={'/'} element={<HomeScreen/>}/>
+                                    <Route path={'/dealers'} element={<DealerScreen/>}/>
+                                    <Route path={'/dealers/:id'} element={<SingleDealer/>}/>
+                                    <Route path={'/auction/:id'} element={<AuctionScreen/>}/>
+                                    <Route path={'/auctions'} element={<AuctionsScreen/>}/>
+                                    <Route path={'/listings'} element={<ListingsScreen/>}/>
+                                    <Route path={'/listing/:id'} element={<ListingScreen/>}/>
+                                    <Route path={'/profile'} element={<ProfileScreen/>}/>
+                                </Route>
+                                <Route path={'/login'} element={<LoginScreen/>}/>
+                                <Route path={'/sign-up'} element={<SignUpScreen/>}/>
+                            </Routes>
+                        </div>
                     </AntApp>
 
                 </ErrorBoundary>

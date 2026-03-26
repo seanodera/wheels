@@ -12,9 +12,9 @@ export default function MainShell() {
         dispatch(autoLoginUser())
 
     }, [dispatch])
-    return <div className={'min-h-screen h-full bg-gray-50 transition-all duration-300 dark:bg-dark-bg'}>
+    return <div className={'h-screen  bg-gray-50 transition-all duration-300 dark:bg-dark-bg'}>
         <Navbar/>
-        <div className={'h-full'}>
+        <div className={'h-[calc(100vh-4rem)]'}>
             <Outlet/>
         </div>
         <Footer/>

@@ -1,4 +1,4 @@
-import type {CommentItem, MiniDealership, User} from "./users";
+import type {CommentItem, MiniDealer, User} from "./users";
 import type {Dealership} from "@/types/dealership.ts";
 
 export interface CarDescription {
@@ -69,8 +69,7 @@ export interface BaseCar {
     video: string[];
     tags: string[];
     createdAt: string;
-    seller: MiniDealership | Dealership;
-    isDealership?: boolean;
+    seller: MiniDealer | Dealership;
     isDealer?: boolean;
     published?:boolean;
     active?: "active" | "inactive" | "sold" | "pending" | "expired" | "live" | "draft";
@@ -87,6 +86,7 @@ export interface CarAuction extends BaseCar {
     type: "auction";
     startingBid: number;
     currentBid: number;
+    reservePrice?: number;
     ending: string;
     bids?: Bid[];
 }

@@ -1,4 +1,4 @@
-import type {Location} from "./common";
+import type {Address} from "./common";
 
 export interface Dealership {
     id: string;
@@ -9,7 +9,7 @@ export interface Dealership {
     email: string;
     phone: string;
     type: 'individual' | 'company';
-    locations: Location[];
+    locations: Address[];
     rating: number;
     description: string;
     phoneNumber: string;
