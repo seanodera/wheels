@@ -1,5 +1,5 @@
 import Navbar from "@/components/navigation/navbar.tsx";
-import {Outlet} from "react-router";
+import {Outlet, useLocation} from "react-router";
 import Footer from "@/components/footer.tsx";
 import {useEffect} from "react";
 import {useAppDispatch} from "@/store/hooks.ts";
@@ -8,15 +8,18 @@ import {autoLoginUser} from "@/store/reducers/authenticationSlice.ts";
 
 export default function MainShell() {
     const dispatch = useAppDispatch();
+    const location = useLocation();
+    const isMessageRoute = location.pathname === "/messages";
+
     useEffect(() => {
         dispatch(autoLoginUser())
 
     }, [dispatch])
-    return <div className={'h-screen  bg-gray-50 transition-all duration-300 dark:bg-dark-bg'}>
+    return <div className={`${isMessageRoute ? "h-screen overflow-hidden" : "min-h-screen"} flex flex-col bg-gray-50 transition-all duration-300 dark:bg-dark-bg`}>
         <Navbar/>
-        <div className={'h-[calc(100vh-4rem)]'}>
+        <div className={`${isMessageRoute ? "min-h-0 overflow-hidden" : ""} flex-1`}>
             <Outlet/>
         </div>
-        <Footer/>
+        {isMessageRoute ? null : <Footer/>}
     </div>
 }

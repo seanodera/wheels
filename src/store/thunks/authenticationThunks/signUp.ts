@@ -3,7 +3,8 @@ import {keysToSnakeCase} from "@/utils/caseConverter.ts";
 import {supabase} from "@/utils/supabase.ts";
 import {omit} from "lodash";
 import {Profile} from "@/types";
-import {normalizeError} from "@/store/thunks/authenticationThunks/login.ts";
+import {normalizeError} from "@/utils";
+
 
 interface SignUpPayload {
     email: string;

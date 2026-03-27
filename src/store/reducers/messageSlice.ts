@@ -27,6 +27,15 @@ interface ReceivedMessagePayload {
     message: Message;
 }
 
+interface StartConversationArgs {
+    dealerId: string;
+    dealerName: string;
+    dealerAvatar?: string;
+    vehicleId?: string;
+    vehicleTitle?: string;
+    subject?: string;
+}
+
 type RawConversationRow = Record<string, unknown> & {
     participants?: Record<string, unknown>[];
     messages?: Record<string, unknown>[];
@@ -76,6 +85,10 @@ function upsertConversation(
         conversation,
         ...conversations.filter((item) => item.id !== conversation.id)
     ];
+}
+
+function getCustomerDisplayName(firstName?: string, lastName?: string) {
+    return [firstName, lastName].filter(Boolean).join(" ").trim() || "Customer";
 }
 
 async function fetchConversationSummaries(
@@ -169,6 +182,34 @@ async function fetchConversationById(
     };
 }
 
+async function findExistingConversation(
+    customerId: string,
+    {
+        dealerId,
+        vehicleId
+    }: Pick<StartConversationArgs, "dealerId" | "vehicleId">
+): Promise<string | null> {
+    let query = supabase
+        .from("conversations")
+        .select("id")
+        .eq("customer_user_id", customerId)
+        .eq("dealer_id", dealerId)
+        .order("updated_at", {ascending: false})
+        .limit(1);
+
+    if (vehicleId) {
+        query = query.eq("vehicle_id", vehicleId);
+    }
+
+    const response = await query.maybeSingle();
+
+    if (response.error) {
+        throw new Error(response.error.message);
+    }
+
+    return response.data?.id ?? null;
+}
+
 export const fetchConversationsAsync = createAsyncThunk<
     FetchConversationResult,
     {
@@ -208,6 +249,89 @@ export const setCurrentConversation = createAsyncThunk<
             return await fetchConversationById(userId, id);
         } catch (error) {
             return rejectWithValue(normalizeError(error, "Failed to load conversation"));
+        }
+    }
+);
+
+export const startConversationAsync = createAsyncThunk<
+    Conversation,
+    StartConversationArgs,
+    { state: RootState; rejectValue: string }
+>(
+    "messages/startConversation",
+    async (args, {getState, rejectWithValue}) => {
+        try {
+            const state = getState();
+            const customer = state.authentication.user;
+
+            if (!customer?.id) {
+                return rejectWithValue("No authenticated user");
+            }
+
+            const existingConversationId = await findExistingConversation(customer.id, {
+                dealerId: args.dealerId,
+                vehicleId: args.vehicleId
+            });
+
+            if (existingConversationId) {
+                return await fetchConversationById(customer.id, existingConversationId);
+            }
+
+            const now = new Date().toISOString();
+            const subject = args.subject ?? args.vehicleTitle ?? `Message for ${args.dealerName}`;
+
+            const conversationInsert = await supabase
+                .from("conversations")
+                .insert({
+                    dealer_id: args.dealerId,
+                    customer_user_id: customer.id,
+                    vehicle_id: args.vehicleId,
+                    vehicle_title: args.vehicleTitle,
+                    subject,
+                    status: "open",
+                    unread_count_for_customer: 0,
+                    unread_count_for_dealer: 0,
+                    created_at: now,
+                    updated_at: now
+                })
+                .select("id")
+                .single();
+
+            if (conversationInsert.error) {
+                return rejectWithValue(conversationInsert.error.message);
+            }
+
+            const conversationId = conversationInsert.data.id as string;
+
+            const participantsInsert = await supabase
+                .from("conversation_participants")
+                .insert([
+                    {
+                        conversation_id: conversationId,
+                        user_id: customer.id,
+                        role: "customer",
+                        display_name: getCustomerDisplayName(customer.firstName, customer.lastName),
+                        avatar: customer.profilePicture,
+                        is_active: true,
+                        joined_at: now
+                    },
+                    {
+                        conversation_id: conversationId,
+                        role: "dealer_admin",
+                        display_name: args.dealerName,
+                        avatar: args.dealerAvatar,
+                        is_active: true,
+                        joined_at: now
+                    }
+                ]);
+
+            if (participantsInsert.error) {
+                return rejectWithValue(participantsInsert.error.message);
+            }
+
+            return await fetchConversationById(customer.id, conversationId);
+        } catch (error) {
+            return rejectWithValue(normalizeError(error, "Failed to start conversation"));
         }
     }
 );
@@ -277,7 +401,7 @@ export const sendMessageAsync = createAsyncThunk<
                     last_message_preview: message.content,
                     last_message_at: message.createdAt,
                     updated_at: message.createdAt,
-                    unread_count_for_customer: (currentConversation.unreadCountForCustomer ?? 0) + 1
+                    unread_count_for_dealer: (currentConversation.unreadCountForDealer ?? 0) + 1
                 })
                 .eq("id", conversationId)
                 .eq("customer_user_id", userId);
@@ -403,6 +527,21 @@ const messageSlice = createSlice({
                 state.hasError = true;
                 state.errorMessage = (action.payload as string) ?? action.error.message ?? "Failed to load conversation";
             })
+            .addCase(startConversationAsync.pending, (state) => {
+                state.loading = true;
+                state.hasError = false;
+                state.errorMessage = "";
+            })
+            .addCase(startConversationAsync.fulfilled, (state, action) => {
+                state.loading = false;
+                state.currentConversation = action.payload;
+                state.conversations = upsertConversation(state.conversations, action.payload);
+            })
+            .addCase(startConversationAsync.rejected, (state, action) => {
+                state.loading = false;
+                state.hasError = true;
+                state.errorMessage = (action.payload as string) ?? action.error.message ?? "Failed to start conversation";
+            })
             .addCase(sendMessageAsync.pending, (state) => {
                 state.hasError = false;
                 state.errorMessage = "";
@@ -420,7 +559,7 @@ const messageSlice = createSlice({
                     lastMessagePreview: action.payload.content,
                     lastMessageAt: action.payload.createdAt,
                     updatedAt: action.payload.createdAt,
-                    unreadCountForCustomer: (state.currentConversation.unreadCountForCustomer ?? 0) + 1
+                    unreadCountForDealer: (state.currentConversation.unreadCountForDealer ?? 0) + 1
                 };
 
                 state.currentConversation = updatedConversation;

@@ -1,13 +1,40 @@
-import {Avatar, Button, Checkbox, Flex, Form, Input, Typography} from "antd";
+import {App, Avatar, Button, Checkbox, Flex, Form, Input, Typography} from "antd";
 import LogoComponent from "../assets/logoComponent.tsx";
-import {Link} from "react-router";
+import {Link, useNavigate} from "react-router";
+import {asyncLoginUser, useAppDispatch, useAppSelector} from "@/store";
+import LoadingScreen from "@/components/navigation/loadingScreen.tsx";
 
 const {Title,Text} = Typography;
 
 export default function LoginScreen() {
-    const onFinish = (values: {email: string,password: string}) => {
-        console.log('Received values:', values);
+    const {message} = App.useApp()
+    const navigate = useNavigate();
+    const {loading} = useAppSelector(state => state.authentication);
+    const dispatch = useAppDispatch();
+    const onFinish = async (values: {email: string,password: string, remember?: boolean}) => {
+        const res = await dispatch(asyncLoginUser(values)).unwrap()
+        if (res.onboardingRequired){
+           await message.info('You need to create a profile. Redirecting now...')
+            navigate(res.redirectTo)
+            return;
+        }
+        message.success('User authenticated successfully.')
+        if (res.redirectTo === '/'){
+            try {
+                navigate(-1)
+            } catch (e){
+                navigate(res.redirectTo)
+                return e;
+            }
+        }
+        navigate(res.redirectTo)
+        return;
     };
+
+    if (loading) {
+
+        return <LoadingScreen/>
+    }
 
     return <div className={'flex flex-col justify-between items-center px-8 py-2 h-screen w-screen bg-dark-950'}>
         <Link to={'/'} className={'w-full flex items-center justify-start'}>
@@ -45,14 +72,12 @@ export default function LoginScreen() {
                 >
                     <Input.Password size={'large'} placeholder="Enter your password" />
                 </Form.Item>
-                <Form.Item>
-                    <Flex justify="space-between" align="center">
-                        <Form.Item name="remember" valuePropName="checked" noStyle>
-                            <Checkbox>Remember me</Checkbox>
-                        </Form.Item>
-                        <Button className={'hover:underline'} color={'primary'} variant={'link'} type={'primary'}>Forgot your password?</Button>
-                    </Flex>
-                </Form.Item>
+                <Flex justify="space-between" align="center">
+                    <Form.Item name="remember" valuePropName="checked" noStyle>
+                        <Checkbox>Remember me</Checkbox>
+                    </Form.Item>
+                    <Button className={'hover:underline'} color={'primary'} variant={'link'} type={'primary'}>Forgot your password?</Button>
+                </Flex>
                 <Form.Item>
                     <Button type="primary" htmlType="submit" className="w-full" size={'large'}>
                         Log In

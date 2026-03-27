@@ -7,23 +7,25 @@ import {
     SendOutlined,
     StarOutlined, UserOutlined
 } from "@ant-design/icons";
-import {CarItem, Dealership, MiniDealership} from "@/types";
+import {CarItem, Dealership, MiniDealer} from "@/types";
 import {toMoneyFormat, trackVehicleView} from "@/utils";
 import {formatDate} from "date-fns";
 import AuctionItem from "@/components/auctionItem.tsx";
 import {AuctionDescription} from "@/screens/auctionScreen.tsx";
-import {Link, useParams} from "react-router";
+import {Link, useNavigate, useParams} from "react-router";
 import {useEffect, useRef, useState} from "react";
 import ListingComponent from "@/components/listingComponent.tsx";
 import {useAppDispatch, useAppSelector} from "@/store/hooks.ts";
 import {clearCurrentListing, fetchListingAsync, fetchListingByIdAsync} from "@/store/reducers/listingSlice.ts";
 import {fetchAuctionsAsync} from "@/store/reducers/auctionSlice.ts";
 import LoadingScreen from "@/components/navigation/loadingScreen.tsx";
+import {startConversationAsync} from "@/store";
 
 const {Title, Text} = Typography;
 export default function ListingScreen() {
     const {id} = useParams<{ id: string }>();
     const dispatch = useAppDispatch();
+    const navigate = useNavigate();
     const {
         currentListing,
         relatedListings,
@@ -75,6 +77,23 @@ export default function ListingScreen() {
             }
         });
     }, [listing?.id, listing?.sellerId, userId]);
+
+    const handleMessageDealer = async () => {
+        if (!listing?.sellerId) {
+            return;
+        }
+
+        await dispatch(startConversationAsync({
+            dealerId: String(listing.sellerId),
+            dealerName: listing.seller.name,
+            dealerAvatar: listing.seller.profile,
+            vehicleId: String(listing.id),
+            vehicleTitle: `${listing.year} ${listing.brand} ${listing.model}`,
+            subject: `Inquiry about ${listing.year} ${listing.brand} ${listing.model}`
+        })).unwrap();
+
+        navigate("/messages");
+    };
 
     if (currentListingLoading) {
         return <LoadingScreen/>;
@@ -193,6 +212,14 @@ export default function ListingScreen() {
                         </div>
                         <Divider orientation={'vertical'}/>
                         <div className={'flex gap-2 items-center'}>
+                            <Button
+                                icon={<SendOutlined/>}
+                                size={'large'}
+                                type={'primary'}
+                                onClick={() => void handleMessageDealer()}
+                            >
+                                Message Dealer
+                            </Button>
                             <Button icon={<StarOutlined/>} size={'large'} color={'default'}
                                     variant={'outlined'}>Watch</Button>
                             <Button icon={<NotificationOutlined/>} size={'large'} color={'default'}
@@ -252,7 +279,7 @@ export default function ListingScreen() {
     </div>
 }
 
-export function DealerComponent({dealer}: { dealer: MiniDealership | Dealership }) {
+export function DealerComponent({dealer}: { dealer: MiniDealer | Dealership }) {
 
     return (<Link to={`/dealers/${dealer.id}`}
                   className={'flex flex-col items-center justify-center gap-2 bg-dark-400/50 hover:bg-dark-400/70 cursor-alias rounded-xl p-8'}>

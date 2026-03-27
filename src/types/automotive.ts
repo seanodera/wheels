@@ -83,6 +83,8 @@ export interface CarItem extends BaseCar {
 }
 
 export interface CarAuction extends BaseCar {
+    auctionId: string;
+    vehicleId: string;
     type: "auction";
     startingBid: number;
     currentBid: number;

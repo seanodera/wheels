@@ -78,12 +78,12 @@ function App() {
                         },
                     }}
         >
-            <div className={'bg-light-bg dark:text-white h-screen dark:bg-dark-bg transition-colors'}>
+            <div className={'bg-light-bg dark:text-white min-h-screen dark:bg-dark-bg transition-colors'}>
 
                 <ErrorBoundary>
 
                     <AntApp>
-                        <div className={'h-screen'}>
+                        <div className={'min-h-screen'}>
                             <Routes>
                                 <Route element={<MainShell/>}>
                                     <Route path={'/messages'} element={<MessagesScreen/>}/>

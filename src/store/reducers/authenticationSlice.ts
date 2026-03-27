@@ -1,6 +1,6 @@
 import {createAsyncThunk, createSlice, type PayloadAction} from "@reduxjs/toolkit";
 import type {CarAuction, CarItem, Profile} from "@/types";
-import {loginAsync} from "@/store/thunks/authenticationThunks/login.ts";
+import {asyncLoginUser} from "@/store/thunks/authenticationThunks/login.ts";
 import {asyncSignUp} from "@/store/thunks/authenticationThunks/signUp.ts";
 import {supabase} from "@/utils/supabase.ts";
 import {
@@ -9,6 +9,7 @@ import {
     fetchSavedVehiclesByUserId,
     fetchWatchedAuctionsByUserId
 } from "@/utils/profileQueries.ts";
+import {clearAuthentication, getAuthentication} from "@/utils";
 
 interface MarketplaceState {
     savedVehicles?: (CarItem | CarAuction)[];
@@ -58,7 +59,15 @@ export const autoLoginUser = createAsyncThunk<Profile, void, {rejectValue: strin
     "authentication/autoLogin",
     async (_, {rejectWithValue}) => {
         try {
-            const sessionResponse = await supabase.auth.getSession();
+            const session = getAuthentication()
+            if (!session.refresh_token || !session.access_token) {
+
+                return rejectWithValue('no data saved');
+            }
+            const sessionResponse = await supabase.auth.setSession({
+                access_token: session.access_token,
+                refresh_token: session.refresh_token
+            });
             if (sessionResponse.error) {
                 return rejectWithValue(sessionResponse.error.message);
             }
@@ -80,7 +89,7 @@ export const autoLoginUser = createAsyncThunk<Profile, void, {rejectValue: strin
     }
 );
 
-export const asyncLoginUser = loginAsync;
+
 
 export const asyncFetchSavedVehicles = createAsyncThunk<(CarItem | CarAuction)[], void, {rejectValue: string}>(
     "authentication/fetchSavedVehicles",
@@ -149,6 +158,8 @@ export const asyncLogoutUser = createAsyncThunk<void, void, {rejectValue: string
         if (response.error) {
             return rejectWithValue(response.error.message);
         }
+
+        clearAuthentication();
     }
 );
 

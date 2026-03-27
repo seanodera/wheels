@@ -1,54 +1,48 @@
-# React + TypeScript + Vite
+# 🚗 Wheels Client – Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Wheels Client is the customer-facing web application for the **Wheels** platform — a marketplace for buying, selling, and auctioning vehicles. This app allows users to browse listings, view detailed vehicle information, participate in auctions, and manage their accounts.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## ✨ Features
 
-## Expanding the ESLint configuration
+-  **Browse Vehicles**
+    - Explore cars by category, price, brand, or location
+    - View featured, popular, and recently added listings
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+-  **Vehicle Details**
+    - High-quality image galleries
+    - Specifications (engine, mileage, fuel type, etc.)
+    - Seller/dealer information
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
-```
+-  **Auctions**
+    - Real-time bidding (if enabled)
+    - Auction countdown timers
+    - Bid history tracking
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+-  **User Accounts**
+    - Sign up / Login / Logout
+    - Profile management
+    - Saved/favorite vehicles
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+-  **Wishlist**
+    - Save vehicles for later
+    - Quick access to liked listings
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
-```
+-  **Location-Based Filtering**
+    - Filter listings by region (e.g., county, city)
+
+---
+
+## ️ Tech Stack
+
+- **Framework:** React (Vite)
+- **State Management:** Redux Toolkit
+- **UI Library:** Ant Design
+- **Routing:** React Router
+- **Backend Integration:** Supabase 
+- **Storage:** Cloudflare R2 / Supabase Storage
+- **Styling:** Tailwind CSS (optional hybrid)
+
+---
+

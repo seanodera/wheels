@@ -1,3 +1,5 @@
+import Cookies from "js-cookie";
+
 export * from './caseConverter.ts'
 export * from './supabase.ts'
 export * from './dbHelpers.ts'
@@ -30,6 +32,30 @@ export function deduceTimingValues(value: Date) {
     const days = Math.floor(hours / 24);
 
     return {days: days, hours: hours, minutes: minutes, diff: diff};
+}
+
+export function saveAuthentication(at: string, rt: string, exp?: number){
+    Cookies.set('wheeler_at', at, {
+        expires: exp
+    });
+    Cookies.set('wheeler_rt', rt,{
+        expires: exp
+    });
+}
+
+export function getAuthentication(){
+   const at = Cookies.get('wheeler_at');
+   const rt = Cookies.get('wheeler_rt');
+
+   return {
+       access_token: at,
+       refresh_token: rt
+   }
+}
+
+export function clearAuthentication(){
+    Cookies.remove('wheeler_at');
+    Cookies.remove('wheeler_rt');
 }
 
 

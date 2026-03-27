@@ -2,6 +2,7 @@ import {createAsyncThunk} from "@reduxjs/toolkit";
 import type { Profile} from "@/types";
 import {supabase} from "@/utils/supabase.ts";
 import {fetchProfileByUserId} from "@/utils/profileQueries.ts";
+import {normalizeError, saveAuthentication} from "@/utils";
 
 export interface AuthSuccessPayload {
     user: Profile;
@@ -15,17 +16,7 @@ type LoginCredentials = {
     remember?: boolean;
 };
 
-
-
-export function normalizeError(error: unknown, fallback: string) {
-    if (typeof error === "string") return error;
-    if (error && typeof error === "object" && "message" in error) {
-        return String((error as {message?: unknown}).message ?? fallback);
-    }
-    return fallback;
-}
-
-export const loginAsync = createAsyncThunk<AuthSuccessPayload, LoginCredentials, {rejectValue: string}>(
+export const asyncLoginUser = createAsyncThunk<AuthSuccessPayload, LoginCredentials, {rejectValue: string}>(
     "authentication/login",
     async (credentials, {rejectWithValue}) => {
         try {
@@ -49,9 +40,13 @@ export const loginAsync = createAsyncThunk<AuthSuccessPayload, LoginCredentials,
             if (!profile) {
                 return {
                     user: {} as Profile,
-                    onboardingRequired,
+                    onboardingRequired: true,
                     redirectTo: '/sign-up/complete'
                 }
+            }
+
+            if (credentials.remember){
+                saveAuthentication(data.session.access_token,data.session.refresh_token, data.session.expires_at)
             }
 
             return {

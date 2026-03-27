@@ -3,6 +3,7 @@ import {Avatar, Badge, Button, Empty, Grid, Input, Spin, Typography} from "antd"
 import {ArrowLeftOutlined, SendOutlined} from "@ant-design/icons";
 import {clearCurrentConversation, fetchConversationsAsync, markConversationRead, sendMessageAsync, setCurrentConversation, useAppDispatch, useAppSelector} from "@/store";
 import type {Conversation} from "@/types";
+import {formatDate} from "date-fns";
 
 const {Title, Text} = Typography;
 const {useBreakpoint} = Grid;
@@ -95,7 +96,7 @@ export default function MessagesScreen() {
     const showChatPane = !isMobile || Boolean(currentConversation);
 
     return (
-        <div className="flex h-full min-h-0 flex-col px-3 py-2 sm:px-4 md:px-6 lg:px-8">
+        <div className="flex h-full min-h-0 flex-col overflow-hidden px-3 py-2 sm:px-4 md:px-6 lg:px-8">
             <div className="shrink-0 pb-4 sm:pb-6">
                 <Title level={3} className="mb-1!">
                     Messages
@@ -128,7 +129,7 @@ export default function MessagesScreen() {
                                             : "hover:bg-accent/20"
                                     }`}
                                 >
-                                    <Badge count={conversation.unreadCountForDealer} size="small">
+                                    <Badge count={conversation.unreadCountForCustomer} size="small">
                                         <Avatar src={dealer?.avatar}>
                                             {dealer?.displayName?.[0] ?? "C"}
                                         </Avatar>
@@ -210,7 +211,7 @@ export default function MessagesScreen() {
                                             <div className="wrap-break-word">{msg.content}</div>
 
                                             <div className="mt-1 text-xs opacity-70">
-                                                {msg.createdAt}
+                                                {formatDate(msg.createdAt, 'dd MMM hh:mm')}
                                             </div>
                                         </div>
                                     );

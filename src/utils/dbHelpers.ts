@@ -15,10 +15,15 @@ export const toCarItem = (value: unknown): CarItem => {
 };
 export const toCarAuction = (value: unknown): CarAuction => {
     const cleaned = keysToCamelCase<VehiclePayload<CarAuction>>(value);
-    // console.log(cleaned)
+    const vehicleId = String((cleaned.vehicle as Partial<CarAuction> | undefined)?.id ?? cleaned.id);
+    const auctionId = String(cleaned.id);
+
     return {
         ...cleaned,
-        ...cleaned.vehicle
+        ...cleaned.vehicle,
+        id: vehicleId,
+        vehicleId,
+        auctionId
     }
 };
 

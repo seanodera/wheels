@@ -1,18 +1,23 @@
-import {Avatar, Empty, Typography} from "antd";
+import {Avatar, Button, Empty, Typography} from "antd";
 import CustomCarousel from "@/components/customCarousel.tsx";
 import ListingComponent from "@/components/listingComponent.tsx";
 import {useEffect, useMemo, useState} from "react";
-import {useParams} from "react-router";
+import {useNavigate, useParams} from "react-router";
 import type {CarAuction, CarItem, Dealership} from "@/types";
 import {isCarAuction, supabase} from "@/utils";
 import {keysToCamelCase} from "@/utils/caseConverter.ts";
 import AuctionItem from "@/components/auctionItem.tsx";
 import LoadingScreen from "@/components/navigation/loadingScreen.tsx";
+import {SendOutlined} from "@ant-design/icons";
+import {useAppDispatch} from "@/store/hooks.ts";
+import {startConversationAsync} from "@/store";
 
 const {Title, Text, Paragraph} = Typography;
 
 export default function SingleDealer() {
     const {id} = useParams<{ id: string }>();
+    const dispatch = useAppDispatch();
+    const navigate = useNavigate();
     const [dealer, setDealer] = useState<Dealership | null>(null);
     const [listings, setListings] = useState<(CarItem | CarAuction)[]>([]);
     const [loading, setLoading] = useState(false);
@@ -99,6 +104,21 @@ export default function SingleDealer() {
 
     const imageSet = useMemo(() => dealer?.images ?? [], [dealer?.images]);
 
+    const handleMessageDealer = async () => {
+        if (!dealer) {
+            return;
+        }
+
+        await dispatch(startConversationAsync({
+            dealerId: dealer.id,
+            dealerName: dealer.name,
+            dealerAvatar: dealer.profile,
+            subject: `Message for ${dealer.name}`
+        })).unwrap();
+
+        navigate("/messages");
+    };
+
     if (loading) {
         return <LoadingScreen/>;
     }
@@ -117,7 +137,12 @@ export default function SingleDealer() {
                             {dealer.locations?.[0]?.subCounty}, {dealer.locations?.[0]?.county}
                         </Text>
                     </div>
-                    <Avatar className={' h-16! w-16!'} size={'large'} src={dealer.profile} shape={'circle'}/>
+                    <div className={'flex items-center gap-3'}>
+                        <Button type={'primary'} icon={<SendOutlined/>} onClick={() => void handleMessageDealer()}>
+                            Message Dealer
+                        </Button>
+                        <Avatar className={' h-16! w-16!'} size={'large'} src={dealer.profile} shape={'circle'}/>
+                    </div>
                 </div>
                 {imageSet.length > 0 && (
                     <CustomCarousel items={1}>
