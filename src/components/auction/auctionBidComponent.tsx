@@ -7,7 +7,7 @@ import {
     UserOutlined
 } from "@ant-design/icons";
 import {deduceTimingValues, supabase, toMoneyFormat} from "@/utils";
-import {App, Avatar, Button, Divider, InputNumber, theme, Typography} from "antd";
+import {App, Avatar, Button, InputNumber, theme, Typography} from "antd";
 import {formatDate, formatDistanceToNow} from "date-fns";
 import {useEffect, useMemo, useRef, useState} from "react";
 import {fetchTopBidder, makeBidAsync, refreshAuctionAsync, useAppDispatch, useAppSelector} from "@/store";
@@ -116,7 +116,7 @@ export default function AuctionBidComponent({listing, viewCount}: { listing: Car
         }
     };
 
-    return <div className={'glass-card bg-white dark:bg-dark rounded-lg'}>
+    return <div className={'glass-card w-full bg-white dark:bg-dark rounded-lg'}>
         <div className={'p-8'}>
             <div className={'grid grid-cols-2 lg:grid-cols-3 gap-4'}>
                 <div>
@@ -162,26 +162,51 @@ export default function AuctionBidComponent({listing, viewCount}: { listing: Car
                         )}
                     </div>
                 </div>
-                <div>
-                    <div className={'grid grid-cols-2 gap-x-4 gap-y-1'}>
-                        <Title level={5} className={'leading-none my-0! '}>Seller</Title>
-                        <Text className={'leading-none my-0!'}>
-                            <Avatar size={'small'} icon={<UserOutlined/>}/> {String(listing.seller.name)}
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <div className="rounded-2xl border border-black/10 bg-black/3 px-4 py-3">
+                        <Text className="mb-1 block text-[11px]! uppercase tracking-[0.22em] text-black/45">
+                            Seller
                         </Text>
-                        <Title level={5} className={'leading-none my-0! '}>Ending</Title>
-                        <Text className={'leading-none my-0!'}>
+                        <div className="flex items-center gap-2">
+                            <Avatar size="small" icon={<UserOutlined/>}/>
+                            <Text className="leading-none! text-black">
+                                {String(listing.seller.name)}
+                            </Text>
+                        </div>
+                    </div>
+
+                    <div className="rounded-2xl border border-black/10 bg-black/3 px-4 py-3">
+                        <Text className="mb-1 block text-[11px]! uppercase tracking-[0.22em] text-black/45">
+                            Ending
+                        </Text>
+                        <Text className="leading-none! text-black">
                             {formatDate(new Date(listing.ending), "eee, MMM dd hh:mm bb")}
                         </Text>
-                        <Title level={5} className={'leading-none my-0! '}>Views</Title>
-                        <Text className={'leading-none my-0!'}>{viewCount ?? listing.views ?? 0}</Text>
-                        <Title level={5} className={'leading-none my-0! '}>Watching</Title>
-                        <Text className={'leading-none my-0!'}>{listing.favorites ?? 0}</Text>
+                    </div>
+
+                    <div className="rounded-2xl border border-black/10 bg-black/3 px-4 py-3">
+                        <Text className="mb-1 block text-[11px]! uppercase tracking-[0.22em] text-black/45">
+                            Views
+                        </Text>
+                        <Title level={5} className="mb-0! leading-none! text-black">
+                            {viewCount ?? listing.views ?? 0}
+                        </Title>
+                    </div>
+
+                    <div className="rounded-2xl border border-black/10 bg-black/3 px-4 py-3">
+                        <Text className="mb-1 block text-[11px]! uppercase tracking-[0.22em] text-black/45">
+                            Watching
+                        </Text>
+                        <Title level={5} className="mb-0! leading-none! text-black">
+                            {listing.favorites ?? 0}
+                        </Title>
                     </div>
                 </div>
             </div>
         </div>
-        <div className="dark:bg-dark rounded-b-lg p-8 flex xl:flex-row flex-col justify-between gap-2 items-center">
-            <div className={'flex w-full  gap-2 items-center'}>
+        <div className="border-t border-black/10  p-5 md:p-6">
+            <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+                <div className="flex w-full flex-col gap-2 sm:flex-row">
                 <InputNumber
                     min={minBid}
                     value={myBid}
@@ -189,7 +214,7 @@ export default function AuctionBidComponent({listing, viewCount}: { listing: Car
                     placeholder={'Enter Bid'}
                     variant="outlined"
                     size="large"
-                    className="text-lg max-w-sm! w-full!"
+                    className="w-full! sm:max-w-sm"
                     prefix={'KSH'}
                     formatter={(value) => toMoneyFormat(Number(value || 0))}
                     onChange={(value) => setMyBid(Number(value || minBid))}
@@ -198,7 +223,7 @@ export default function AuctionBidComponent({listing, viewCount}: { listing: Car
                 <Button
                     type="primary"
                     size="large"
-                    className="text-lg block"
+                    className="rounded-full px-6"
                     onClick={() => void handlePlaceBid()}
                     disabled={hasEnded}
                     loading={placingBid}
@@ -206,11 +231,18 @@ export default function AuctionBidComponent({listing, viewCount}: { listing: Car
                     {hasEnded ? "Auction Ended" : "Place Bid"}
                 </Button>
             </div>
-            <Divider orientation={'vertical'}/>
-            <div className={'flex w-full xl:justify-between gap-2 items-center'}>
-                <Button icon={<NotificationOutlined/>} size={'large'} color={'default'} variant={'outlined'}>
-                    Notify Me
-                </Button>
+
+                <div className="flex w-full xl:w-auto">
+                    <Button
+                        icon={<NotificationOutlined/>}
+                        size={'large'}
+                        color={'default'}
+                        variant={'outlined'}
+                        className="h-12 w-full rounded-full border-black/15 bg-white/70 px-5 xl:w-auto"
+                    >
+                        Notify Me
+                    </Button>
+                </div>
             </div>
         </div>
     </div>

@@ -17,16 +17,16 @@ function ImageSection({listing}: { listing: BaseCar }) {
     const hiddenImageCount = Math.max(gallery.length - thumbnailLimit, 0);
 
     return (
-        <section className="shadow-md ">
+        <section className="">
             <div className="flex flex-col gap-4">
 
                 <Image
                     src={activeImage}
                     alt={carName}
-                    className="aspect-20/7! rounded-xl w-full! object-cover object-center!"
+                    className="lg:aspect-20/7! aspect-video! rounded-xl w-full! object-cover object-center!"
                 />
 
-                <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
+                <div className="flex gap-2">
                     {visibleThumbnails.map((img, index) => {
                         const isActive = index === safeIndex;
 
@@ -34,17 +34,16 @@ function ImageSection({listing}: { listing: BaseCar }) {
                             <div
                                 key={`${img}-${index}`}
                                 onClick={() => setActiveIndex(index)}
-                                className={`overflow-hidden rounded-2xl transition ${
+                                className={`w-1/5 overflow-hidden rounded-xl transition max-md:h-20 lg:aspect-video ${
                                     isActive
-                                        ? "border-accent border-2"
-                                        : "border-black/10 text-black/55"
+                                        ? "border-2 border-accent"
+                                        : "border border-black/10"
                                 }`}
                             >
-                                <Image
+                                <img
                                     src={img}
                                     alt={`${carName} image ${index + 1}`}
-                                    preview={false}
-                                    className="aspect-video! h-full! w-full! rounded-2xl object-cover object-center!"
+                                    className="w-full h-full object-cover"
                                 />
                             </div>
                         );
@@ -53,7 +52,7 @@ function ImageSection({listing}: { listing: BaseCar }) {
                     {hiddenImageCount > 0 && (
                         <div
                             onClick={() => setActiveIndex(thumbnailLimit)}
-                            className={`flex aspect-video flex-col items-center justify-center rounded-2xl border p-4 text-center transition ${
+                            className={`flex-1 aspect-video! flex flex-col items-center justify-center rounded-xl border transition ${
                                 safeIndex >= thumbnailLimit
                                     ? "border-primary bg-dark text-white"
                                     : "border-dark/10 bg-white/70 text-black"
@@ -61,7 +60,9 @@ function ImageSection({listing}: { listing: BaseCar }) {
                         >
                             <Text
                                 className={`text-[11px]! uppercase tracking-[0.32em] ${
-                                    safeIndex >= thumbnailLimit ? "text-white/70" : "text-dark/55"
+                                    safeIndex >= thumbnailLimit
+                                        ? "text-white/70"
+                                        : "text-dark/55"
                                 }`}
                             >
                                 Private View

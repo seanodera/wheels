@@ -75,7 +75,6 @@ export default function AuctionScreen() {
         [newlyListed, listing?.id]
     );
 
-    console.log(currentAuction, currentAuctionLoading);
     if (currentAuctionLoading) {
         return <LoadingScreen/>;
     }
@@ -87,61 +86,103 @@ export default function AuctionScreen() {
     const mileage = asMileage(listing);
 
     return (
-        <div className="py-4 px-4 lg:px-16 text-current">
-            <div className={'flex flex-col md:flex-row justify-between items-start md:items-center w-full pb-4 gap-4'}>
-                <div>
-                    <Title className={'leading-none my-0!'} level={3}>
-                        {listing.year} {listing.brand} {listing.model}
-                    </Title>
-                    <Text className={'leading-none my-0!'}>
-                        {mileage} KM · {listing.engine} · {listing.transmission} . {listing.drivetrain}
-                    </Text>
+        <div className="px-4 py-4 text-current lg:px-8 xl:px-12">
+            <div className="mx-auto flex w-full max-w-360 flex-col gap-6">
+                <div className="flex flex-col gap-4 rounded-2xl bg-[#f8f4ec] glass-card dark:bg-dark p-5 md:flex-row md:items-end md:justify-between md:p-6">
+                    <div className="min-w-0">
+                        <Text className="text-[11px]! uppercase tracking-[0.38em]">
+                            Live Auction
+                        </Text>
+                        <Title className="mb-0! mt-2! leading-none " level={2}>
+                            {listing.year} {listing.brand} {listing.model}
+                        </Title>
+                        <Text className="mt-3 block ">
+                            {mileage} KM · {listing.engine} · {listing.transmission} · {listing.drivetrain}
+                        </Text>
+                    </div>
+                    <div className="grid w-full grid-cols-2 gap-2 md:flex md:w-auto">
+                        <Button
+                            icon={<StarOutlined/>}
+                            size={'large'}
+                            color={'default'}
+                            variant={'outlined'}
+                            className="h-11 rounded-full border-black/15 bg-white/70 px-5"
+                        >
+                            Watch
+                        </Button>
+                        <Button
+                            icon={<SendOutlined/>}
+                            size={'large'}
+                            color={'default'}
+                            variant={'outlined'}
+                            className="h-11 rounded-full border-black/15 bg-white/70 px-5"
+                        >
+                            Share
+                        </Button>
+                    </div>
                 </div>
-                <div className={'flex gap-2'}>
-                    <Button icon={<StarOutlined/>} size={'large'} color={'default'} variant={'outlined'}>Watch</Button>
-                    <Button icon={<SendOutlined/>} size={'large'} color={'default'} variant={'outlined'}>Share</Button>
-                </div>
-            </div>
-            <ImageSection listing={listing}/>
-            <div className={'grid grid-cols-1 lg:grid-cols-5 gap-8 py-8 '}>
-                <div className={'lg:col-span-3 space-y-8'}>
-                    <AuctionBidComponent listing={listing} viewCount={viewCount}/>
 
-                    <AuctionDescription listing={listing}/>
-                    <div>
+                <ImageSection listing={listing}/>
+
+                <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.55fr)_380px]">
+                    <div className="order-1 space-y-6">
+                        <AuctionBidComponent listing={listing} viewCount={viewCount}/>
+
+                        <div className="rounded-[28px] border bg-[#f8f4ec] glass-card dark:bg-dark p-5 md:p-7">
+                            <Title level={4} className="mb-6! ">
+                                Description
+                            </Title>
+                            <AuctionDescription listing={listing}/>
+                        </div>
+
                         {listing.video.length > 0 && (
-                            <div>
-                                <Title level={4}>Videos</Title>
-                                <div className="grid grid-cols-2 gap-4">
-                                    {listing.video.map((video: string, index: number) => {
-                                        return (
-                                            <video src={video} key={index}/>
-                                        );
-                                    })}
+                            <div className="rounded-[28px] border border-black/10 bg-white p-5 md:p-7">
+                                <Title level={4} className="mb-6! text-black">
+                                    Videos
+                                </Title>
+                                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                    {listing.video.map((video: string, index: number) => (
+                                        <video
+                                            src={video}
+                                            key={index}
+                                            controls
+                                            className="w-full rounded-2xl bg-black"
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {relatedNewlyListed.length > 0 && (
+                            <div className="space-y-4">
+                                <Title className="mb-0! text-black" level={4}>
+                                    New Listings
+                                </Title>
+                                <div className="grid grid-cols-1 gap-5 md:grid-cols-2 2xl:grid-cols-4">
+                                    {relatedNewlyListed.map((auction: CarAuction) => (
+                                        <AuctionItem key={auction.id} listing={auction}/>
+                                    ))}
                                 </div>
                             </div>
                         )}
                     </div>
-                    {relatedNewlyListed.length > 0 && (<div>
-                        <Title className={'my-4!'} level={4}>New Listing</Title>
-                        <div className={'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8'}>
-                            {relatedNewlyListed.map((auction: CarAuction) => (
-                                <AuctionItem key={auction.id} listing={auction}/>
-                            ))}
-                        </div>
-                    </div>)}
-                </div>
-                <div className={'col-span-2'}>
-                    {(listing.seller).name && <DealerComponent dealer={listing.seller} listing={listing}/>}
-                    {relatedEndingSoon.length > 0 && (<>
-                        <Title className={'my-4!'} level={4}>Auctions Ending Soon</Title>
-                        <div className={'grid grid-cols-1 md:grid-cols-2 gap-8 mb-8'}>
-                            {relatedEndingSoon.map((auction: CarAuction) => (
-                                <AuctionItem key={auction.id} listing={auction}/>
-                            ))}
-                        </div>
-                    </>)}
 
+                    <aside className="order-2 space-y-6 xl:sticky xl:top-6 xl:self-start">
+                        {listing.seller.name && <DealerComponent dealer={listing.seller} listing={listing}/>}
+
+                        {relatedEndingSoon.length > 0 && (
+                            <div className="space-y-4 rounded-[28px] border border-black/10 bg-[#f8f4ec] p-5 md:p-6">
+                                <Title className="mb-0! text-black" level={4}>
+                                    Ending Soon
+                                </Title>
+                                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-1">
+                                    {relatedEndingSoon.map((auction: CarAuction) => (
+                                        <AuctionItem key={auction.id} listing={auction}/>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </aside>
                 </div>
             </div>
         </div>
