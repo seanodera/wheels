@@ -7,7 +7,7 @@ import {useAppDispatch, useAppSelector} from "@/store/hooks.ts";
 import {CloseOutlined, MenuOutlined, MoonOutlined, SearchOutlined, SunOutlined, UserOutlined} from "@ant-design/icons";
 import {setTheme} from "@/store";
 
-const {Title} = Typography;
+const {Title,Text} = Typography;
 
 const carOptions = [
     {value: "Toyota Corolla"},
@@ -120,9 +120,7 @@ export default function Navbar() {
                     )}
 
                     {/* Mobile Menu Button */}
-                    <button onClick={() => setIsMenuOpen(true)} className="md:hidden text-white text-2xl">
-                        <MenuOutlined/>
-                    </button>
+                    <Button onClick={() => setIsMenuOpen(true)} icon={<MenuOutlined/>} type={'text'} className="md:hidden text-2xl"/>
                 </div>
             </div>
 
@@ -156,29 +154,49 @@ export default function Navbar() {
                 closable
                 onClose={() => setIsMenuOpen(false)}
                 open={isMenuOpen}
+                size={280}
+                className={'dark:bg-dark-bg!'}
             >
-                <div className="flex flex-col gap-4">
-                    <NavbarItem to="/auctions">Auctions</NavbarItem>
-                    <NavbarItem to="/listings">Listings</NavbarItem>
-                    <NavbarItem to="/dealers">Dealers</NavbarItem>
-                    {user ? (
-                        <Link to="/profile" className="flex gap-2 items-center">
-                            <Avatar src={user.profilePicture} icon={!user.profilePicture && <UserOutlined/>}
-                                    size="large"/>
-                            <div>
-                                <Title className="!leading-none !my-0"
-                                       level={5}>{user.firstName} {user.lastName}</Title>
-                                {/*<Text className="!leading-none !my-0" type="secondary">{user.username}</Text>*/}
+                <div className="flex flex-col h-full justify-between gap-4">
+                    <div className={'flex flex-1 flex-col gap-6'}>
+                        <NavbarItem to="/auctions">Auctions</NavbarItem>
+                        <NavbarItem to="/listings">Listings</NavbarItem>
+                        <NavbarItem to="/dealers">Dealers</NavbarItem>
+                        {user ? (
+                            <Link to="/profile" className="flex gap-2 items-center">
+                                <Avatar src={user.profilePicture} icon={!user.profilePicture && <UserOutlined/>}
+                                        size="large"/>
+                                <div>
+                                    <Title className="leading-none! my-0!"
+                                           level={5}>{user.firstName} {user.lastName}</Title>
+                                    {/*<Text className="!leading-none !my-0" type="secondary">{user.username}</Text>*/}
+                                </div>
+                            </Link>
+                        ) : (
+                            <div className="flex flex-col gap-2">
+                                <Link to="/login"><Button size="large" type="primary"
+                                                          className="w-full">Login</Button></Link>
+                                <Link to="/sign-up"><Button size="large" type="primary" ghost className="w-full">Sign
+                                    up</Button></Link>
                             </div>
-                        </Link>
-                    ) : (
-                        <div className="flex flex-col gap-2">
-                            <Link to="/login"><Button size="large" type="primary"
-                                                      className="w-full">Login</Button></Link>
-                            <Link to="/sign-up"><Button size="large" type="primary" ghost className="w-full">Sign
-                                up</Button></Link>
-                        </div>
-                    )}
+                        )}
+                    </div>
+                    <div className="rounded-2xl bg-gray-50 p-4 dark:bg-dark">
+                        <Text type="secondary" className="mb-2 block text-xs uppercase tracking-wide">
+                            Appearance
+                        </Text>
+
+                        <Segmented
+                            block
+                            onChange={(value) => dispatch(setTheme(value as "light" | "dark"))}
+                            shape="round"
+                            options={[
+                                { value: "light", icon: <SunOutlined /> },
+                                { value: "dark", icon: <MoonOutlined /> },
+                            ]}
+                            value={theme}
+                        />
+                    </div>
                 </div>
             </Drawer>
         </>
