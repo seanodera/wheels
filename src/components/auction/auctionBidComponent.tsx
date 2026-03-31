@@ -1,4 +1,4 @@
-import {CarAuction} from "@/types";
+import {AuctionBid, CarAuction} from "@/types";
 import {
     ArrowUpOutlined,
     ClockCircleOutlined,
@@ -9,7 +9,7 @@ import {
 import {deduceTimingValues, supabase, toMoneyFormat} from "@/utils";
 import {App, Avatar, Button, InputNumber, theme, Typography} from "antd";
 import {formatDate, formatDistanceToNow} from "date-fns";
-import {useEffect, useMemo, useRef, useState} from "react";
+import {useEffect, useRef, useState} from "react";
 import {fetchTopBidder, makeBidAsync, refreshAuctionAsync, useAppDispatch, useAppSelector} from "@/store";
 import {animate, motion} from "framer-motion";
 
@@ -24,10 +24,9 @@ export default function AuctionBidComponent({listing, viewCount}: { listing: Car
     const [hasEnded, setHasEnded] = useState(false);
     const pendingBidRef = useRef<number | null>(null);
 
-    const topBidder = useMemo(() => {
-        return listing.bids && listing.bids.length !== 0 ? listing.bids[listing.bids.length - 1] : undefined
-    }, [listing]);
     const currentBid = Number(listing.currentBid) || 0;
+    const topBidder = listing.bids?.[0];
+
     const minBid = currentBid + 50000;
 
     useEffect(() => {
@@ -79,11 +78,12 @@ export default function AuctionBidComponent({listing, viewCount}: { listing: Car
                     filter: `auction_id=eq.${listing.auctionId}`,
                 },
                 async (payload) => {
-                    console.log(payload)
-                    const res = await dispatch(fetchTopBidder(listing.auctionId)).unwrap()
-                    console.log(res)
+                    // console.log(payload,listing)
+                    dispatch(fetchTopBidder(payload.new.auction_id))
+                    // console.log(res)
 
-                    void message.info(`Current bid updated to KSH ${toMoneyFormat(res.bid.amount ?? 0)}`);}
+                    void message.info(`Current bid updated to KSH ${toMoneyFormat(payload.new.amount ?? 0)}`);
+                }
             )
             .subscribe();
 
@@ -145,22 +145,12 @@ export default function AuctionBidComponent({listing, viewCount}: { listing: Car
                     </div>
                     {/*<CountUp end={currentBid} prefix={'KSH'}/>*/}
                     {/*<Timer type={'countup'} value={currentBid}/>*/}
-                  <div className={'flex gap-2 items-center mb-2 '}>
-                      <Title className={'leading-none! mb-2!'}><AnimatedBid value={currentBid}/></Title>
-                      <Button size={'large'} type={'link'} icon={<ReloadOutlined/>} onClick={() => dispatch(refreshAuctionAsync(listing.id))}/>
-                  </div>
-                    <div>
-                        {topBidder && (
-                            <div className={'flex gap-2 items-center mb-4 ps-3'}>
-                                <Avatar size={'small'} icon={!topBidder.user?.profilePicture && <UserOutlined/>} src={topBidder.user?.profilePicture}/>
-                                <Text type={'secondary'} className={'leading-none! my-0!'}>
-
-                                {topBidder.user?.firstName} {topBidder.user?.lastName}  {formatDistanceToNow(topBidder.createdAt, {addSuffix: true})}
-                                </Text>
-
-                            </div>
-                        )}
+                    <div className={'flex gap-2 items-center mb-2 '}>
+                        <Title className={'leading-none! mb-2!'}><AnimatedBid value={currentBid}/></Title>
+                        <Button size={'large'} type={'link'} icon={<ReloadOutlined/>}
+                                onClick={() => dispatch(refreshAuctionAsync(listing.id))}/>
                     </div>
+                    <AnimatedTopBidder topBidder={topBidder}/>
                 </div>
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <div className="rounded-2xl border border-black/10 bg-black/3 px-4 py-3">
@@ -207,30 +197,30 @@ export default function AuctionBidComponent({listing, viewCount}: { listing: Car
         <div className="border-t border-black/10  p-5 md:p-6">
             <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
                 <div className="flex w-full flex-col gap-2 sm:flex-row">
-                <InputNumber
-                    min={minBid}
-                    value={myBid}
-                    step={50000}
-                    placeholder={'Enter Bid'}
-                    variant="outlined"
-                    size="large"
-                    className="w-full! sm:max-w-sm"
-                    prefix={'KSH'}
-                    formatter={(value) => toMoneyFormat(Number(value || 0))}
-                    onChange={(value) => setMyBid(Number(value || minBid))}
-                    disabled={hasEnded || placingBid}
-                />
-                <Button
-                    type="primary"
-                    size="large"
-                    className="rounded-full px-6"
-                    onClick={() => void handlePlaceBid()}
-                    disabled={hasEnded}
-                    loading={placingBid}
-                >
-                    {hasEnded ? "Auction Ended" : "Place Bid"}
-                </Button>
-            </div>
+                    <InputNumber
+                        min={minBid}
+                        value={myBid}
+                        step={50000}
+                        placeholder={'Enter Bid'}
+                        variant="outlined"
+                        size="large"
+                        className="w-full! sm:max-w-sm"
+                        prefix={'KSH'}
+                        formatter={(value) => toMoneyFormat(Number(value || 0))}
+                        onChange={(value) => setMyBid(Number(value || minBid))}
+                        disabled={hasEnded || placingBid}
+                    />
+                    <Button
+                        type="primary"
+                        size="large"
+                        className="rounded-full px-6"
+                        onClick={() => void handlePlaceBid()}
+                        disabled={hasEnded}
+                        loading={placingBid}
+                    >
+                        {hasEnded ? "Auction Ended" : "Place Bid"}
+                    </Button>
+                </div>
 
                 <div className="flex w-full xl:w-auto">
                     <Button
@@ -238,7 +228,7 @@ export default function AuctionBidComponent({listing, viewCount}: { listing: Car
                         size={'large'}
                         color={'default'}
                         variant={'outlined'}
-                        className="h-12 w-full rounded-full border-black/15 bg-white/70 px-5 xl:w-auto"
+                        className="px-5 xl:w-auto"
                     >
                         Notify Me
                     </Button>
@@ -249,9 +239,7 @@ export default function AuctionBidComponent({listing, viewCount}: { listing: Car
 }
 
 
-export function AnimatedBid({ value }: {
-    value: number;
-}) {
+export function AnimatedBid({value}: { value: number; }) {
     const [displayValue, setDisplayValue] = useState(value);
     const prevValueRef = useRef(value);
     const [flash, setFlash] = useState(false);
@@ -288,10 +276,62 @@ export function AnimatedBid({ value }: {
                 color: flash ? "#00e5ff" : token.colorText, // AntD primary blue
                 scale: flash ? [1, 1.05, 1] : 1
             }}
-            transition={{ duration: 0.6 }}
-            style={{ display: "inline-block" }}
+            transition={{duration: 0.6}}
+            style={{display: "inline-block"}}
         >
             KSH {toMoneyFormat(displayValue)}
         </motion.span>
+    );
+}
+
+export function AnimatedTopBidder({topBidder}: { topBidder?: AuctionBid }) {
+    const [flash, setFlash] = useState(false);
+    const prevBidderRef = useRef<string | null>(null);
+
+    const bidderKey = topBidder
+        ? `${topBidder.userId}-${topBidder.createdAt}-${topBidder.amount}`
+        : null;
+
+    useEffect(() => {
+        if (!bidderKey) return;
+
+        if (prevBidderRef.current && prevBidderRef.current !== bidderKey) {
+            setFlash(true);
+            const timeout = setTimeout(() => setFlash(false), 600);
+            prevBidderRef.current = bidderKey;
+
+            return () => clearTimeout(timeout);
+        }
+
+        prevBidderRef.current = bidderKey;
+    }, [bidderKey]);
+
+    if (!topBidder) {
+        return null;
+    }
+
+    return (
+        <motion.div
+            className="mb-4 flex items-center gap-2 ps-3"
+            animate={{
+                opacity: flash ? [0.7, 1] : 1,
+                scale: flash ? [1, 1.03, 1] : 1
+            }}
+            transition={{duration: 0.6}}
+        >
+            <Avatar
+                size="small"
+                icon={!topBidder.user?.profilePicture && <UserOutlined/>}
+                src={topBidder.user?.profilePicture}
+            />
+            <Text
+                type="secondary"
+                className="leading-none! my-0!"
+                style={{color: flash ? "#00e5ff" : undefined}}
+            >
+                {topBidder.user? `${topBidder.user.firstName} ${topBidder.user.lastName}  ` : 'Anonymous'}
+                {formatDistanceToNow(topBidder.createdAt, {addSuffix: true, includeSeconds: true})}
+            </Text>
+        </motion.div>
     );
 }

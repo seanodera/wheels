@@ -7,7 +7,7 @@ import {startCase} from "lodash";
 import AuctionItem from "@/components/auctionItem.tsx";
 import {trackVehicleView} from "@/utils";
 import {useAppDispatch, useAppSelector} from "@/store/hooks.ts";
-import {fetchAuctionsAsync, fetchTopBidder, setCurrentAuctionAsync} from "@/store/reducers/auctionSlice.ts";
+import {fetchAuctionsAsync, setCurrentAuctionAsync} from "@/store/reducers/auctionSlice.ts";
 import LoadingScreen from "@/components/navigation/loadingScreen.tsx";
 import AuctionBidComponent from "@/components/auction/auctionBidComponent.tsx";
 import {DealerComponent} from "@/components/dealer/dealerComponent.tsx";
@@ -36,11 +36,7 @@ export default function AuctionScreen() {
 
     useEffect(() => {
         if (!id || currentAuction && currentAuction.id === id) return;
-        dispatch(setCurrentAuctionAsync(id)).then(res => {
-            if (res.meta.requestStatus === 'fulfilled' && res.payload && typeof res.payload !== 'string'){
-                dispatch(fetchTopBidder(res.payload.auctionId))
-            }
-        });
+        dispatch(setCurrentAuctionAsync(id));
         if (!auctionsFetched) {
             dispatch(fetchAuctionsAsync());
         }

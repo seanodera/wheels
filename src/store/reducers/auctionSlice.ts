@@ -70,8 +70,27 @@ async function fetchAuctionByVehicleId(vehicleId: string) {
     if (!response.data) {
         throw new Error("Auction not found");
     }
+    const bidResponse = await supabase.from('auction_bids')
+        .select('*, user:profiles(*)', {count: 'exact'})
+        .eq('auction_id',response.data.id)
+        .order('created_at', {ascending: false})
+        .limit(1)
+    if (bidResponse.error){
+        throw new Error("Failed to fetch top bidder");
+    }
 
-    return toCarAuction(response.data);
+    if (!bidResponse.data || bidResponse.data.length === 0) {
+        // ("Vehicle has no auctions")
+        return toCarAuction(response.data);
+    } else {
+        return toCarAuction({
+            ...response.data,
+            bids: [keysToCamelCase<AuctionBid>(bidResponse.data[0])],
+            totalBids: bidResponse.count ?? 0,
+        });
+    }
+
+
 }
 
 type PlaceBidResult = {
@@ -348,7 +367,7 @@ const auctionSlice = createSlice({
             .addCase(fetchTopBidder.fulfilled, (state, action) => {
 
                 if (!state.currentAuction) return
-                console.log(action.payload)
+                console.log(action.payload);
                 state.currentAuction = {
                     ...state.currentAuction,
                     currentBid: action.payload.bid.amount,
