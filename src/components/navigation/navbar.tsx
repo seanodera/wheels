@@ -42,11 +42,11 @@ export default function Navbar() {
         <>
             {/* Navbar Container */}
             <div
-                className="flex w-screen px-4 md:px-16 py-3 justify-between items-center shadow-lg top-0 left-0 right-0 z-50">
+                className="flex w-screen px-4 md:px-16 py-3 justify-between items-center dark:bg-black/60 shadow-lg top-0 left-0 right-0 z-50">
                 {/* Left Section (Logo + Links) */}
                 <div className="flex items-center gap-6">
                     <Link to="/" className="flex gap-2 items-center">
-                        <Avatar className="animate-spin" shape="square" size="large"
+                        <Avatar className="animate-spin duration-1000" shape="square" size="large"
                                 src={<LogoComponent className="text-primary"/>}/>
                         <Title className="leading-none !my-0" level={4}>Wheela</Title>
                     </Link>
@@ -103,15 +103,17 @@ export default function Navbar() {
                         </div>
                     ) : (
                         <div className="hidden md:flex gap-2">
-                            <Segmented
-                                onChange={(value) => dispatch(setTheme(value as "light" | "dark"))}
-                                shape="round"
-                                options={[
-                                    {value: "light", icon: <SunOutlined/>},
-                                    {value: "dark", icon: <MoonOutlined/>},
-                                ]}
-                                value={theme}
-                            />
+                          <div>
+                              <Segmented
+                                  onChange={(value) => dispatch(setTheme(value as "light" | "dark"))}
+                                  shape="round"
+                                  options={[
+                                      {value: "light", icon: <SunOutlined/>},
+                                      {value: "dark", icon: <MoonOutlined/>},
+                                  ]}
+                                  value={theme}
+                              />
+                          </div>
                             <Link to="/login"><Button size="large" type="primary">Login</Button></Link>
                             <Link to="/sign-up"><Button size="large" type="primary" ghost>Sign up</Button></Link>
                         </div>

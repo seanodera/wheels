@@ -3,29 +3,30 @@ import {
     ArrowUpOutlined,
     ClockCircleOutlined,
     NotificationOutlined,
-    PlusOutlined,
     SendOutlined,
-    StarOutlined, UserOutlined
+    StarOutlined,
+    UserOutlined
 } from "@ant-design/icons";
-import {CarItem, Dealership, MiniDealer} from "@/types";
+import {CarItem} from "@/types";
 import {toMoneyFormat, trackVehicleView} from "@/utils";
 import {formatDate} from "date-fns";
 import AuctionItem from "@/components/auctionItem.tsx";
 import {AuctionDescription} from "@/screens/auctionScreen.tsx";
-import {Link, useNavigate, useParams} from "react-router";
+import {useParams} from "react-router";
 import {useEffect, useRef, useState} from "react";
 import ListingComponent from "@/components/listingComponent.tsx";
 import {useAppDispatch, useAppSelector} from "@/store/hooks.ts";
 import {clearCurrentListing, fetchListingAsync, fetchListingByIdAsync} from "@/store/reducers/listingSlice.ts";
 import {fetchAuctionsAsync} from "@/store/reducers/auctionSlice.ts";
 import LoadingScreen from "@/components/navigation/loadingScreen.tsx";
-import {startConversationAsync} from "@/store";
+import {DealerComponent} from "@/components/dealer/dealerComponent.tsx";
+import ImageSection from "@/components/common/imageSection.tsx";
 
 const {Title, Text} = Typography;
 export default function ListingScreen() {
     const {id} = useParams<{ id: string }>();
     const dispatch = useAppDispatch();
-    const navigate = useNavigate();
+
     const {
         currentListing,
         relatedListings,
@@ -78,22 +79,7 @@ export default function ListingScreen() {
         });
     }, [listing?.id, listing?.sellerId, userId]);
 
-    const handleMessageDealer = async () => {
-        if (!listing?.sellerId) {
-            return;
-        }
 
-        await dispatch(startConversationAsync({
-            dealerId: String(listing.sellerId),
-            dealerName: listing.seller.name,
-            dealerAvatar: listing.seller.profile,
-            vehicleId: String(listing.id),
-            vehicleTitle: `${listing.year} ${listing.brand} ${listing.model}`,
-            subject: `Inquiry about ${listing.year} ${listing.brand} ${listing.model}`
-        })).unwrap();
-
-        navigate("/messages");
-    };
 
     if (currentListingLoading) {
         return <LoadingScreen/>;
@@ -115,36 +101,10 @@ export default function ListingScreen() {
                 <Button icon={<SendOutlined/>} size={'large'} color={'default'} variant={'outlined'}>Share</Button>
             </div>
         </div>
-        <div className="grid grid-cols-3 lg:grid-cols-5 grid-rows-4 gap-2">
-            <div className="col-span-3 row-span-4 relative">
-                {/* Main Image */}
-                <img
-                    src={listing.images[0] || "/placeholder.jpg"}
-                    className="w-full h-full object-cover rounded-lg aspect-video"
-                    alt={`${listing.brand} ${listing.model}`}
-                />
-            </div>
-
-            {listing.images.slice(1, 8).map((img, index) => (
-                <img
-                    key={index}
-                    src={img || "/placeholder.jpg"}
-                    alt={`${listing.brand} ${listing.model}`}
-                    className="w-full h-full object-cover rounded-lg aspect-video"
-                />
-            ))}
-            {listing.images.length > 8 && <div className={'w-full h-full object-cover rounded-lg aspect-video bg-cover'}
-                                               style={{backgroundImage: `url("${listing.images[9]}")`}}>
-                <div className={'w-full h-full flex flex-col justify-center items-center rounded-lg bg-dark/70'}>
-                    <Title level={4}>{listing.images.length - 8} More Images</Title>
-                    <Button className={'aspect-square'} type={'text'} variant={'outlined'} ghost
-                            icon={<PlusOutlined className={'text-xl'}/>} shape={'round'} size={'large'}/>
-                </div>
-            </div>}
-        </div>
+        <ImageSection listing={listing}/>
         <div className={'grid grid-cols-1 lg:grid-cols-5 gap-8 py-8 '}>
             <div className={'lg:col-span-3 space-y-8'}>
-                <div className={'bg-dark-400/30 rounded-lg'}>
+                <div className={'glass-card bg-white dark:bg-dark rounded-lg'}>
                     <div className={'p-8'}>
                         <div className={' grid grid-cols-2 md:grid-cols-4 gap-8'}>
                             <div>
@@ -212,14 +172,6 @@ export default function ListingScreen() {
                         </div>
                         <Divider orientation={'vertical'}/>
                         <div className={'flex gap-2 items-center'}>
-                            <Button
-                                icon={<SendOutlined/>}
-                                size={'large'}
-                                type={'primary'}
-                                onClick={() => void handleMessageDealer()}
-                            >
-                                Message Dealer
-                            </Button>
                             <Button icon={<StarOutlined/>} size={'large'} color={'default'}
                                     variant={'outlined'}>Watch</Button>
                             <Button icon={<NotificationOutlined/>} size={'large'} color={'default'}
@@ -258,7 +210,7 @@ export default function ListingScreen() {
 
             </div>
             <div className={'col-span-2'}>
-                {(listing.seller).name && <DealerComponent dealer={listing.seller}/>}
+                {(listing.seller).name && <DealerComponent dealer={listing.seller} listing={listing}/>}
                 <Title className={'my-4!'} level={4}>Auctions Ending Soon</Title>
                 <div className={'grid grid-cols-1 md:grid-cols-2 gap-8 mb-8'}>
                     {[...auctions].sort((a, b) => new Date(a.ending).getTime() - new Date(b.ending).getTime()).slice(0, 8).map((listing) => (
@@ -279,22 +231,37 @@ export default function ListingScreen() {
     </div>
 }
 
-export function DealerComponent({dealer}: { dealer: MiniDealer | Dealership }) {
-
-    return (<Link to={`/dealers/${dealer.id}`}
-                  className={'flex flex-col items-center justify-center gap-2 bg-dark-400/50 hover:bg-dark-400/70 cursor-alias rounded-xl p-8'}>
-        <Title level={3}>Dealer Profile</Title>
-        <Avatar size={'large'} className={'h-20! w-20!'} src={dealer.profile} shape={'circle'}/>
-        <Title level={5}>{dealer.name}</Title>
-        <div className={'flex gap-4 items-center'}>
-            <div><Title className={'leading-none! my-0! text-center'}>{dealer.listingCount}</Title>
-                <Text className={'leading-none! mt-0! mb-4! text-center'} type={'secondary'}>Listings</Text></div>
-            <div><Title className={'leading-none! my-0! text-center'}>{dealer.soldCount}</Title>
-                <Text className={'leading-none! mt-0! mb-4! text-center'} type={'secondary'}>Sold Vehicles</Text></div>
-            <div><Title className={'leading-none! my-0! text-center'}>{dealer.views}</Title>
-                <Text className={'leading-none! mt-0! mb-4! text-center'} type={'secondary'}>Views</Text></div>
-
-
-        </div>
-    </Link>)
-}
+// export function DealerComponent({dealer}: { dealer:Dealership }) {
+//
+//     if (dealer.views > 0){
+//
+//
+//         return <div className={'flex justify-between bg-dark rounded-xl'}>
+//             <Link to={`/dealers/${dealer.id}`} className={'flex gap-1'}>
+//                 <Avatar shape={'circle'}/>
+//                 <Title level={5}>{dealer.name}</Title>
+//             </Link>
+//             <div>
+//                  <Button type={'primary'} ghost icon={<MessageOutlined/>}/>
+//             </div>
+//         </div>
+//     }
+//
+//
+//     return (<Link to={`/dealers/${dealer.id}`}
+//                   className={'flex flex-col items-center justify-center gap-2 bg-dark-400/50 hover:bg-dark-400/70 cursor-alias rounded-xl p-8'}>
+//         <Title level={3}>Dealer Profile</Title>
+//         <Avatar size={'large'} className={'h-20! w-20!'} src={dealer.profile} shape={'circle'}/>
+//         <Title level={5}>{dealer.name}</Title>
+//         <div className={'flex gap-4 items-center'}>
+//             <div><Title className={'leading-none! my-0! text-center'}>{dealer.listingCount}</Title>
+//                 <Text className={'leading-none! mt-0! mb-4! text-center'} type={'secondary'}>Listings</Text></div>
+//             <div><Title className={'leading-none! my-0! text-center'}>{dealer.soldCount}</Title>
+//                 <Text className={'leading-none! mt-0! mb-4! text-center'} type={'secondary'}>Sold Vehicles</Text></div>
+//             <div><Title className={'leading-none! my-0! text-center'}>{dealer.views}</Title>
+//                 <Text className={'leading-none! mt-0! mb-4! text-center'} type={'secondary'}>Views</Text></div>
+//
+//
+//         </div>
+//     </Link>)
+// }

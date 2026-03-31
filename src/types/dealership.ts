@@ -17,6 +17,7 @@ export interface Dealership {
     auctionCount: number;
     soldCount: number;
     views: number;
+    verified?: boolean;
 }
 
 export interface DealerUser {

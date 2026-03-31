@@ -15,7 +15,7 @@ export default function MainShell() {
         dispatch(autoLoginUser())
 
     }, [dispatch])
-    return <div className={`${isMessageRoute ? "h-screen overflow-hidden" : "min-h-screen"} flex flex-col bg-gray-50 transition-all duration-300 dark:bg-dark-bg`}>
+    return <div className={`${isMessageRoute ? "h-screen overflow-hidden" : "min-h-screen"} w-screen flex flex-col bg-gray-50 transition-all duration-300 dark:bg-dark-bg`}>
         <Navbar/>
         <div className={`${isMessageRoute ? "min-h-0 overflow-hidden" : ""} flex-1`}>
             <Outlet/>

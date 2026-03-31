@@ -9,7 +9,7 @@ export default function DealerBanner() {
     const dealers = popularDealers.slice(0, 6);
     return <div className={'px-4 md:px-16'}>
         {/*<Title className={'p-4 !leading-none !my-0'} level={1}>Dealers</Title>*/}
-        <Title className={'!leading-none !my-0'} level={3}>Featured Dealers</Title>
+        <Title className={'leading-none! my-0!'} level={3}>Featured Dealers</Title>
 
 
             <CustomCarousel items={3} autoPlay>

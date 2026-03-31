@@ -2,23 +2,21 @@ import {useParams} from "react-router";
 import {useEffect, useMemo, useRef, useState} from "react";
 import type {CarAuction, CarItem} from "@/types";
 import {Button, Empty, Typography} from "antd";
-import {PlusOutlined, SendOutlined, StarOutlined} from "@ant-design/icons";
+import {SendOutlined, StarOutlined} from "@ant-design/icons";
 import {startCase} from "lodash";
 import AuctionItem from "@/components/auctionItem.tsx";
 import {trackVehicleView} from "@/utils";
 import {useAppDispatch, useAppSelector} from "@/store/hooks.ts";
-import {
-    clearCurrentAuction,
-    fetchAuctionsAsync,
-    setCurrentAuctionAsync
-} from "@/store/reducers/auctionSlice.ts";
+import {fetchAuctionsAsync, fetchTopBidder, setCurrentAuctionAsync} from "@/store/reducers/auctionSlice.ts";
 import LoadingScreen from "@/components/navigation/loadingScreen.tsx";
 import AuctionBidComponent from "@/components/auction/auctionBidComponent.tsx";
+import {DealerComponent} from "@/components/dealer/dealerComponent.tsx";
+import ImageSection from "@/components/common/imageSection.tsx";
 
 const {Title, Text, Paragraph} = Typography;
 
 const asMileage = (listing: CarAuction) =>
-    Number((listing as unknown as {millage?: number | string}).millage ?? listing.mileage ?? 0);
+    Number((listing as unknown as { millage?: number | string }).millage ?? listing.mileage ?? 0);
 
 export default function AuctionScreen() {
     const {id} = useParams<{ id: string }>();
@@ -28,27 +26,25 @@ export default function AuctionScreen() {
         currentAuctionLoading,
         endingSoon,
         newlyListed,
-        error
-    } = useAppSelector((state) => state.auction as {
-        currentAuction: CarAuction | null;
-        currentAuctionLoading: boolean;
-        endingSoon: CarAuction[];
-        newlyListed: CarAuction[];
-        error: string | null;
-    });
+        error,
+        auctionsFetched
+    } = useAppSelector((state) => state.auction);
     const [viewCount, setViewCount] = useState<number>(0);
     const userId = useAppSelector((state) => state.authentication.user?.id ?? null);
     const trackedVehicleId = useRef<string | null>(null);
     const listing = currentAuction;
 
     useEffect(() => {
-        if (!id) return;
-        dispatch(setCurrentAuctionAsync(id));
-        dispatch(fetchAuctionsAsync());
-        return () => {
-            dispatch(clearCurrentAuction());
-        };
-    }, [dispatch, id]);
+        if (!id || currentAuction && currentAuction.id === id) return;
+        dispatch(setCurrentAuctionAsync(id)).then(res => {
+            if (res.meta.requestStatus === 'fulfilled' && res.payload && typeof res.payload !== 'string'){
+                dispatch(fetchTopBidder(res.payload.auctionId))
+            }
+        });
+        if (!auctionsFetched) {
+            dispatch(fetchAuctionsAsync());
+        }
+    }, [auctionsFetched, currentAuction, dispatch, id]);
 
     useEffect(() => {
         setViewCount(Number(listing?.views ?? 0));
@@ -79,6 +75,7 @@ export default function AuctionScreen() {
         [newlyListed, listing?.id]
     );
 
+    console.log(currentAuction, currentAuctionLoading);
     if (currentAuctionLoading) {
         return <LoadingScreen/>;
     }
@@ -105,68 +102,11 @@ export default function AuctionScreen() {
                     <Button icon={<SendOutlined/>} size={'large'} color={'default'} variant={'outlined'}>Share</Button>
                 </div>
             </div>
-            <div className="grid grid-cols-3 lg:grid-cols-5 grid-rows-4 gap-2">
-                <div className="col-span-3 row-span-4 relative">
-                    <img
-                        src={listing.images[0] || "/placeholder.jpg"}
-                        className="w-full h-full object-cover rounded-lg aspect-video"
-                        alt={`${listing.brand} ${listing.model}`}
-                    />
-                </div>
-
-                {listing.images.slice(1, 8).map((img: string, index: number) => (
-                    <img
-                        key={index}
-                        src={img || "/placeholder.jpg"}
-                        alt={`${listing.brand} ${listing.model}`}
-                        className="w-full h-full object-cover rounded-lg aspect-video"
-                    />
-                ))}
-                <div className={'w-full h-full object-cover rounded-lg aspect-video bg-cover'}
-                     style={{backgroundImage: `url("${listing.images[9]}")`}}>
-                    <div className={'w-full h-full flex flex-col justify-center items-center rounded-lg bg-dark/70'}>
-                        <Title level={5}>{Math.max(0, listing.images.length - 8)} More Images</Title>
-                        <Button className={'aspect-square'} type={'text'} variant={'outlined'} ghost
-                                icon={<PlusOutlined className={'text-xl'}/>} shape={'round'} size={'large'}/>
-                    </div>
-                </div>
-            </div>
+            <ImageSection listing={listing}/>
             <div className={'grid grid-cols-1 lg:grid-cols-5 gap-8 py-8 '}>
                 <div className={'lg:col-span-3 space-y-8'}>
                     <AuctionBidComponent listing={listing} viewCount={viewCount}/>
-                    {/*                value={myBid}*/}
-                    {/*                step={50000}*/}
-                    {/*                placeholder={'Enter Bid'}*/}
-                    {/*                variant="outlined"*/}
-                    {/*                size="large"*/}
-                    {/*                className="text-lg max-w-sm! w-full!"*/}
-                    {/*                prefix={'KSH'}*/}
-                    {/*                formatter={(value) => toMoneyFormat(Number(value || 0))}*/}
-                    {/*                onChange={(value) => setMyBid(Number(value || minBid))}*/}
-                    {/*            />*/}
-                    {/*            <Button type="primary" size="large" className="text-lg block">*/}
-                    {/*                Place Bid*/}
-                    {/*            </Button>*/}
-                    {/*        </div>*/}
-                    {/*        <Divider orientation={'vertical'}/>*/}
-                    {/*        <div className={'flex w-full xl:justify-between gap-2 items-center'}>*/}
-                    {/*            <Button*/}
-                    {/*                icon={<SendOutlined/>}*/}
-                    {/*                size={'large'}*/}
-                    {/*                type={'primary'}*/}
-                    {/*                onClick={() => void handleMessageDealer()}*/}
-                    {/*            >*/}
-                    {/*                Message Dealer*/}
-                    {/*            </Button>*/}
-                    {/*            /!*<Button icon={<StarOutlined/>} size={'large'} color={'default'} variant={'outlined'}>*!/*/}
-                    {/*            /!*    Watch*!/*/}
-                    {/*            /!*</Button>*!/*/}
-                    {/*            <Button icon={<NotificationOutlined/>} size={'large'} color={'default'} variant={'outlined'}>*/}
-                    {/*                Notify Me*/}
-                    {/*            </Button>*/}
-                    {/*        </div>*/}
-                    {/*    </div>*/}
-                    {/*</div>*/}
+
                     <AuctionDescription listing={listing}/>
                     <div>
                         {listing.video.length > 0 && (
@@ -174,7 +114,7 @@ export default function AuctionScreen() {
                                 <Title level={4}>Videos</Title>
                                 <div className="grid grid-cols-2 gap-4">
                                     {listing.video.map((video: string, index: number) => {
-                                       return (
+                                        return (
                                             <video src={video} key={index}/>
                                         );
                                     })}
@@ -192,13 +132,15 @@ export default function AuctionScreen() {
                     </div>)}
                 </div>
                 <div className={'col-span-2'}>
+                    {(listing.seller).name && <DealerComponent dealer={listing.seller} listing={listing}/>}
                     {relatedEndingSoon.length > 0 && (<>
                         <Title className={'my-4!'} level={4}>Auctions Ending Soon</Title>
                         <div className={'grid grid-cols-1 md:grid-cols-2 gap-8 mb-8'}>
                             {relatedEndingSoon.map((auction: CarAuction) => (
                                 <AuctionItem key={auction.id} listing={auction}/>
                             ))}
-                        </div></>)}
+                        </div>
+                    </>)}
 
                 </div>
             </div>

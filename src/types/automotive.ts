@@ -1,5 +1,6 @@
-import type {CommentItem, MiniDealer, User} from "./users";
+import type {CommentItem} from "./users";
 import type {Dealership} from "@/types/dealership.ts";
+import {Profile} from "@/types/profile.ts";
 
 export interface CarDescription {
     general: string;
@@ -10,14 +11,6 @@ export interface CarDescription {
     serviceHistory?: string;
     ownershipHistory?: string;
     sellerNotes?: string;
-}
-
-export interface Bid {
-    id: string;
-    userId: string;
-    user: User;
-    amount: number;
-    timestamp: string;
 }
 
 export interface BaseCar {
@@ -69,7 +62,7 @@ export interface BaseCar {
     video: string[];
     tags: string[];
     createdAt: string;
-    seller: MiniDealer | Dealership;
+    seller: Dealership;
     isDealer?: boolean;
     published?:boolean;
     active?: "active" | "inactive" | "sold" | "pending" | "expired" | "live" | "draft";
@@ -90,7 +83,8 @@ export interface CarAuction extends BaseCar {
     currentBid: number;
     reservePrice?: number;
     ending: string;
-    bids?: Bid[];
+    bids?: AuctionBid[];
+    totalBids: number;
 }
 
 export interface ListingFilters {
@@ -101,4 +95,14 @@ export interface ListingFilters {
     minPrice?: number;
     maxPrice?: number;
     query?: string;
+}
+
+export interface AuctionBid {
+    id: string;
+    auctionId: string;
+    userId: string;
+    amount: number;
+    createdAt: string;
+    vehicleId: string;
+    user?: Profile;
 }

@@ -1,7 +1,7 @@
 import {createAsyncThunk, createSlice} from "@reduxjs/toolkit";
-import type {CarAuction} from "@/types";
+import type {AuctionBid, CarAuction} from "@/types";
 import type {RootState} from "@/store";
-import {normalizeError, supabase} from "@/utils";
+import {keysToCamelCase, normalizeError, supabase} from "@/utils";
 import {toCarAuction, toNumber} from "@/utils/dbHelpers.ts";
 
 interface AuctionState {
@@ -16,9 +16,12 @@ interface AuctionState {
     currentAuctionLoading: boolean;
     placingBid: boolean;
     error: string | null;
+    topBidderLoading: boolean;
+    auctionsFetched: boolean;
 }
 
 const initialState: AuctionState = {
+    auctionsFetched: false,
     auctions: [],
     endingSoon: [],
     newlyListed: [],
@@ -29,7 +32,8 @@ const initialState: AuctionState = {
     loading: false,
     currentAuctionLoading: false,
     placingBid: false,
-    error: null
+    error: null,
+    topBidderLoading: false
 };
 
 
@@ -237,6 +241,32 @@ export const makeBidAsync = createAsyncThunk<
     }
 );
 
+export const fetchTopBidder = createAsyncThunk(
+    'auction/fetchTopBidder',
+    async (auctionId:string,{rejectWithValue}) => {
+        try {
+            const response = await supabase.from('auction_bids')
+                .select('*, user:profiles(*)', {count: 'exact'})
+                .eq('auction_id',auctionId)
+                .order('created_at', {ascending: false})
+                .limit(1)
+            if (response.error){
+                return rejectWithValue("Failed to fetch top bidder");
+            }
+
+            if (!response.data || response.data.length === 0) {
+                return rejectWithValue("Vehicle has no auctions")
+            }
+            return {
+                bid: keysToCamelCase<AuctionBid>(response.data[0]),
+                count: response.count ?? 0
+            };
+        } catch (error) {
+            return rejectWithValue(normalizeError(error, 'failed to fetch top bidder'));
+        }
+
+    }
+)
 
 const auctionSlice = createSlice({
     name: "auction",
@@ -263,6 +293,7 @@ const auctionSlice = createSlice({
                 state.noReserve = derived.noReserve;
                 state.lowestMileage = derived.lowestMileage;
                 state.inspected = derived.inspected;
+                state.auctionsFetched = true;
             })
             .addCase(fetchAuctionsAsync.rejected, (state, action) => {
                 state.loading = false;
@@ -310,6 +341,26 @@ const auctionSlice = createSlice({
                 state.placingBid = false;
                 state.error = action.payload ?? "Failed to place bid";
             });
+        builder
+            .addCase(fetchTopBidder.pending, (state) => {
+                state.topBidderLoading = true
+            })
+            .addCase(fetchTopBidder.fulfilled, (state, action) => {
+
+                if (!state.currentAuction) return
+                console.log(action.payload)
+                state.currentAuction = {
+                    ...state.currentAuction,
+                    currentBid: action.payload.bid.amount,
+                    bids: [action.payload.bid, ...(state.currentAuction.bids ?? [])],
+                    totalBids: action.payload.count
+                }
+                state.topBidderLoading = false
+            })
+            .addCase(fetchTopBidder.rejected, (state, action) => {
+                state.error = action.payload as string ?? "Failed to fetch top bid";
+                state.topBidderLoading = false
+            })
     }
 });
 
