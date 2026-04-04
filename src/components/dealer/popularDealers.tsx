@@ -1,5 +1,5 @@
 import {DealerItem} from "@/components/dealer/dealerItem.tsx";
-import CustomCarousel from "@/components/customCarousel.tsx";
+import CustomCarousel from "@/components/common/customCarousel.tsx";
 import {useAppSelector} from "@/store/hooks.ts";
 
 

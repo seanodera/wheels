@@ -1,4 +1,4 @@
-import {Avatar, Button, Divider, Empty, InputNumber, Typography} from "antd";
+import {Avatar, Button, Empty, InputNumber, Typography} from "antd";
 import {
     ArrowUpOutlined,
     ClockCircleOutlined,
@@ -7,22 +7,24 @@ import {
     StarOutlined,
     UserOutlined
 } from "@ant-design/icons";
-import {CarItem} from "@/types";
+import type {CarItem} from "@/types";
 import {toMoneyFormat, trackVehicleView} from "@/utils";
 import {formatDate} from "date-fns";
-import AuctionItem from "@/components/auctionItem.tsx";
-import {AuctionDescription} from "@/screens/auctionScreen.tsx";
+import AuctionItem from "@/components/auction/auctionItem.tsx";
 import {useParams} from "react-router";
 import {useEffect, useRef, useState} from "react";
-import ListingComponent from "@/components/listingComponent.tsx";
+import ListingComponent from "@/components/listings/listingComponent.tsx";
 import {useAppDispatch, useAppSelector} from "@/store/hooks.ts";
 import {clearCurrentListing, fetchListingAsync, fetchListingByIdAsync} from "@/store/reducers/listingSlice.ts";
-import {fetchAuctionsAsync} from "@/store/reducers/auctionSlice.ts";
+import {fetchAuctionsAsync, setRelatedAuctionReferenceId} from "@/store/reducers/auctionSlice.ts";
 import LoadingScreen from "@/components/navigation/loadingScreen.tsx";
 import {DealerComponent} from "@/components/dealer/dealerComponent.tsx";
 import ImageSection from "@/components/common/imageSection.tsx";
+import {VehicleDescription} from "@/components/common/vehicleDescription.tsx";
+import {VehicleDetails} from "@/components/common/vehicleDetails.tsx";
 
 const {Title, Text} = Typography;
+
 export default function ListingScreen() {
     const {id} = useParams<{ id: string }>();
     const dispatch = useAppDispatch();
@@ -32,7 +34,7 @@ export default function ListingScreen() {
         relatedListings,
         currentListingLoading
     } = useAppSelector((state) => state.listing);
-    const auctions = useAppSelector((state) => state.auction.endingSoon);
+    const relatedEndingSoon = useAppSelector((state) => state.auction.relatedEndingSoon);
     const [myBid, setMyBid] = useState<number>(0);
     const [viewCount, setViewCount] = useState<number>(0);
     const userId = useAppSelector((state) => state.authentication.user?.id ?? null);
@@ -50,6 +52,7 @@ export default function ListingScreen() {
 
         return () => {
             dispatch(clearCurrentListing());
+            dispatch(setRelatedAuctionReferenceId(null));
         };
     }, [dispatch, id]);
 
@@ -79,189 +82,246 @@ export default function ListingScreen() {
         });
     }, [listing?.id, listing?.sellerId, userId]);
 
-
+    useEffect(() => {
+        dispatch(setRelatedAuctionReferenceId(listing?.id ? String(listing.id) : null));
+    }, [dispatch, listing?.id]);
 
     if (currentListingLoading) {
         return <LoadingScreen/>;
     }
 
     if (!id || !listing) {
-        return <Empty description={'No listing found'}/>;
+        return <Empty description="No listing found"/>;
     }
-    return <div className="py-4 px-4 lg:px-16 text-current">
-        <div className={'flex justify-between items-center w-full pb-4'}>
-            <div>
-                <Title className={'leading-none my-0!'}
-                       level={3}>{listing.year} {listing.brand} {listing.model}</Title>
-                <Text className={'leading-none my-0!'}>{listing.mileage} KM
-                    · {listing.engine} · {listing.transmission} . {listing.drivetrain}</Text>
-            </div>
-            <div className={'flex gap-2'}>
-                <Button icon={<StarOutlined/>} size={'large'} color={'default'} variant={'outlined'}>Watch</Button>
-                <Button icon={<SendOutlined/>} size={'large'} color={'default'} variant={'outlined'}>Share</Button>
-            </div>
-        </div>
-        <ImageSection listing={listing}/>
-        <div className={'grid grid-cols-1 lg:grid-cols-5 gap-8 py-8 '}>
-            <div className={'lg:col-span-3 space-y-8'}>
-                <div className={'glass-card bg-white dark:bg-dark rounded-lg'}>
-                    <div className={'p-8'}>
-                        <div className={' grid grid-cols-2 md:grid-cols-4 gap-8'}>
-                            <div>
-                                <Title className={'leading-none my-0! '} type={'secondary'}
-                                       level={5}><ClockCircleOutlined/> Date Posted</Title>
-                                <Title className={'leading-none my-0!'}
-                                       level={5}>{formatDate(listing.createdAt, 'HH:MM dd mmm yy')}</Title>
-                            </div>
-                            <div>
-                                <Title className={'leading-none my-0! '} type={'secondary'}
-                                       level={5}><ArrowUpOutlined/> Price</Title>
-                                <Title className={'leading-none my-0!'}
-                                       level={5}>KSH {toMoneyFormat(listing.price)}</Title>
-                            </div>
-                            <div>
-                                <Title className={'leading-none my-0! '} type={'secondary'} level={5}>Negotiable</Title>
-                                <Title className={'leading-none my-0!'} level={5}>{}</Title>
-                            </div>
-                            {/*<div>*/}
-                            {/*    <Title className={'leading-none !my-0 '} type={'secondary'}*/}
-                            {/*           level={5}><MessageOutlined/> Comments</Title>*/}
-                            {/*    <Title className={'leading-none !my-0'} level={5}>{listing.comments.length}</Title>*/}
-                            {/*</div>*/}
-                        </div>
-                        <div className={'flex flex-col md:flex-row justify-between gap-4 py-4'}>
-                            <div>
 
-                                <Title level={2}>KSH {toMoneyFormat(listing.price)}</Title>
+    return (
+        <div className="px-4 py-4 text-current lg:px-8 xl:px-12">
+            <div className="mx-auto flex w-full flex-col gap-6">
+                <div className="flex flex-col gap-4 rounded-2xl bg-light-accent glass-card dark:bg-dark p-5 md:flex-row md:items-end md:justify-between md:p-6">
+                    <div className="min-w-0">
+                        <Text className="text-[11px]! uppercase tracking-[0.38em]">
+                            Premium Listing
+                        </Text>
+                        <Title className="mb-0! mt-2! leading-none " level={2}>
+                            {listing.year} {listing.brand} {listing.model}
+                        </Title>
+                        <Text className="mt-3 block ">
+                            {listing.mileage} KM · {listing.engine} · {listing.transmission} · {listing.drivetrain}
+                        </Text>
+                    </div>
+                    <div className="grid w-full grid-cols-2 gap-2 md:flex md:w-auto">
+                        <Button
+                            icon={<StarOutlined/>}
+                            size="large"
+                            color="default"
+                            variant="outlined"
+                            className="h-11 rounded-full border-black/15 bg-white/70 px-5"
+                        >
+                            Watch
+                        </Button>
+                        <Button
+                            icon={<SendOutlined/>}
+                            size="large"
+                            color="default"
+                            variant="outlined"
+                            className="h-11 rounded-full border-black/15 bg-white/70 px-5"
+                        >
+                            Share
+                        </Button>
+                    </div>
+                </div>
+
+                <ImageSection listing={listing}/>
+
+                <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.5fr)_380px] 2xl:gap-12 2xl:grid-cols-6">
+                    <div className="order-1 space-y-6 2xl:space-y-12 2xl:col-span-4 xl:sticky xl:top-6 xl:self-start">
+                        <div className="rounded-2xl border bg-light-accent glass-card dark:bg-dark">
+                            <div className="p-5 md:p-7">
+                                <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
+                                    <div>
+                                        <Title className="leading-none my-0! " type="secondary" level={5}>
+                                            <ClockCircleOutlined/> Date Posted
+                                        </Title>
+                                        <Title className="leading-none my-0!" level={5}>
+                                            {formatDate(listing.createdAt, "HH:mm dd MMM yy")}
+                                        </Title>
+                                    </div>
+                                    <div>
+                                        <Title className="leading-none my-0! " type="secondary" level={5}>
+                                            <ArrowUpOutlined/> Price
+                                        </Title>
+                                        <Title className="leading-none my-0!" level={5}>
+                                            KSH {toMoneyFormat(listing.price)}
+                                        </Title>
+                                    </div>
+                                    <div>
+                                        <Title className="leading-none my-0! " type="secondary" level={5}>
+                                            Negotiable
+                                        </Title>
+                                        <Title className="leading-none my-0!" level={5}>
+                                            {listing.negotiable ? "Yes" : "No"}
+                                        </Title>
+                                    </div>
+                                </div>
+
+                                <div className="flex flex-col gap-4 py-6 lg:flex-row lg:justify-between">
+                                    <div>
+                                        <Title level={1} className="mb-0!">
+                                            KSH {toMoneyFormat(listing.price)}
+                                        </Title>
+                                        {/*<Text className="mt-2 block text-black/55">*/}
+                                        {/*    Serious offers only*/}
+                                        {/*    Serious offers only*/}
+                                        {/*</Text>*/}
+                                    </div>
+
+                                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                        <div className="rounded-2xl border border-black/10 bg-black/3 px-4 py-3">
+                                            <Text className="mb-1 block text-[11px]! uppercase tracking-[0.22em] text-black/45">
+                                                Seller
+                                            </Text>
+                                            <div className="flex items-center gap-2">
+                                                <Avatar size="small" icon={<UserOutlined/>}/>
+                                                <Text className="leading-none! text-black">
+                                                    {listing.seller.name}
+                                                </Text>
+                                            </div>
+                                        </div>
+
+                                        <div className="rounded-2xl border border-black/10 bg-black/3 px-4 py-3">
+                                            <Text className="mb-1 block text-[11px]! uppercase tracking-[0.22em] text-black/45">
+                                                Posted
+                                            </Text>
+                                            <Text className="leading-none! text-black">
+                                                {formatDate(new Date(listing.createdAt), "eee, MMM dd")}
+                                            </Text>
+                                        </div>
+
+                                        <div className="rounded-2xl border border-black/10 bg-black/3 px-4 py-3">
+                                            <Text className="mb-1 block text-[11px]! uppercase tracking-[0.22em] text-black/45">
+                                                Views
+                                            </Text>
+                                            <Title level={5} className="mb-0! leading-none! text-black">
+                                                {viewCount}
+                                            </Title>
+                                        </div>
+
+                                        <div className="rounded-2xl border border-black/10 bg-black/3 px-4 py-3">
+                                            <Text className="mb-1 block text-[11px]! uppercase tracking-[0.22em] text-black/45">
+                                                Watching
+                                            </Text>
+                                            <Title level={5} className="mb-0! leading-none! text-black">
+                                                {listing.favorites ?? 0}
+                                            </Title>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <div>
-                                <div className={'grid grid-cols-2 gap-x-4 gap-y-1'}>
-                                    <Title level={5} className={'leading-none my-0! '}>Seller</Title>
-                                    <Text
-                                        className={'leading-none my-0!'}><Avatar size={'small'} icon={
-                                        <UserOutlined/>}/> {listing.seller.name}
-                                    </Text>
-                                    <Title level={5} className={'leading-none my-0! '}>Views</Title>
-                                    <Text
-                                        className={'leading-none my-0!'}>{viewCount}</Text>
-                                    <Title level={5} className={'leading-none my-0! '}>Watching</Title>
-                                    <Text
-                                        className={'leading-none my-0!'}>{listing.favorites ?? 0}</Text>
+
+                            <div className="border-t border-black/10 p-5 md:p-6">
+                                <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+                                    <div className="flex w-full flex-col gap-2 sm:flex-row">
+                                        <InputNumber
+                                            value={myBid}
+                                            step={50000}
+                                            placeholder="Enter Offer"
+                                            variant="outlined"
+                                            size="large"
+                                            className="w-full! sm:max-w-sm"
+                                            prefix="KSH"
+                                            formatter={(value) => toMoneyFormat(Number(value || 0))}
+                                            onChange={(value) => setMyBid(Number(value || listing.price))}
+                                        />
+                                        <Button type="primary" size="large" className="rounded-full px-6">
+                                            Make Offer
+                                        </Button>
+                                    </div>
+
+                                    <div className="flex w-full xl:w-auto">
+                                        <Button
+                                            icon={<NotificationOutlined/>}
+                                            size="large"
+                                            color="default"
+                                            variant="outlined"
+                                            className="px-5 xl:w-auto"
+                                        >
+                                            Notify Me
+                                        </Button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <div
-                        className="bg-dark-400 rounded-b-lg p-8 flex flex-col md:flex-row justify-between gap-2 items-center">
-                        <Title level={5}>Make an Offer</Title>
-                        <div className={'flex gap-2 items-center'}>
-                            <InputNumber
-                                value={myBid}
-                                step={50000}
-                                placeholder={'Enter Bid'}
-                                variant="outlined"
-                                size="large"
-                                className="text-lg max-w-sm! w-full!"
-                                prefix={'KSH'}
-                                formatter={(value) => toMoneyFormat(value || 0)}
-                                onChange={(e) => setMyBid(e || listing.price + 50000)}
-                            />
-                            <Button type="primary" size="large" className="text-lg block">
-                                Place Bid
-                            </Button>
+
+                        <VehicleDetails listing={listing}/>
+
+                        <div className="rounded-2xl border bg-light-accent glass-card dark:bg-dark p-5 md:p-7">
+                            <Title level={4} className="mb-6! ">
+                                Description
+                            </Title>
+                            <VehicleDescription listing={listing}/>
                         </div>
-                        <Divider orientation={'vertical'}/>
-                        <div className={'flex gap-2 items-center'}>
-                            <Button icon={<StarOutlined/>} size={'large'} color={'default'}
-                                    variant={'outlined'}>Watch</Button>
-                            <Button icon={<NotificationOutlined/>} size={'large'} color={'default'}
-                                    variant={'outlined'}>Notify Me</Button>
-                        </div>
-                    </div>
-                </div>
-                <AuctionDescription listing={listing}/>
-                <div>
-                    {listing.video.length > 0 && (
-                        <div>
-                            <Title level={4}>Videos</Title>
-                            <div className="grid grid-cols-2 gap-4">
-                                {listing.video.map((video: string, index: number) => {
-                                    const videoId = video.split("v=")[1]?.split("&")[0]; // Extract YouTube video ID
-                                    return (
-                                        <a
-                                            key={index}
-                                            href={video}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="block"
-                                        >
-                                            <img
-                                                src={`https://img.youtube.com/vi/${videoId}/hqdefault.jpg`}
-                                                alt={`Video ${index + 1}`}
-                                                className="w-full rounded-lg shadow-lg"
-                                            />
-                                        </a>
-                                    );
-                                })}
+
+                        {listing.video.length > 0 && (
+                            <div className="rounded-2xl border border-black/10 bg-white p-5 md:p-7 dark:bg-dark">
+                                <Title level={4} className="mb-6! text-black dark:text-white">
+                                    Videos
+                                </Title>
+                                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                    {listing.video.map((video, index: number) => {
+
+
+                                        return (
+                                            <a
+                                                key={index}
+                                                href={video.url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="block overflow-hidden rounded-2xl"
+                                            >
+                                                <img
+                                                    src={video.thumbnail}
+                                                    alt={`Video ${index + 1}`}
+                                                    className="w-full object-cover"
+                                                />
+                                            </a>
+                                        );
+                                    })}
+                                </div>
                             </div>
-                        </div>
-                    )}
-                </div>
+                        )}
 
-            </div>
-            <div className={'col-span-2'}>
-                {(listing.seller).name && <DealerComponent dealer={listing.seller} listing={listing}/>}
-                <Title className={'my-4!'} level={4}>Auctions Ending Soon</Title>
-                <div className={'grid grid-cols-1 md:grid-cols-2 gap-8 mb-8'}>
-                    {[...auctions].sort((a, b) => new Date(a.ending).getTime() - new Date(b.ending).getTime()).slice(0, 8).map((listing) => (
-                        <AuctionItem key={listing.id} listing={listing}/>
-                    ))}
-                </div>
+                        {relatedListings.length > 0 && (
+                            <div className="space-y-4">
+                                <Title className="mb-0! text-black" level={4}>
+                                    Related Listings
+                                </Title>
+                                <div className="grid grid-cols-1 gap-5 md:grid-cols-2 2xl:grid-cols-4">
+                                    {relatedListings.map((item) => (
+                                        <ListingComponent key={item.id} listing={item}/>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
 
+                    <aside className="order-2 space-y-6 2xl:col-span-2 xl:sticky xl:top-6 xl:self-start">
+                        {listing.seller.name && <DealerComponent dealer={listing.seller} listing={listing}/>}
+
+                        {relatedEndingSoon.length > 0 && (
+                            <div className="space-y-4 rounded-2xl border border-black/10 bg-light-accent p-5 md:p-6">
+                                <Title className="mb-0! text-black" level={4}>
+                                    Auctions Ending Soon
+                                </Title>
+                                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-1">
+                                    {relatedEndingSoon.map((item) => (
+                                        <AuctionItem key={item.id} listing={item}/>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </aside>
+                </div>
             </div>
         </div>
-        <div>
-            <Title className={'my-4!'} level={4}>Related Listing</Title>
-            <div className={'grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-8'}>
-                {relatedListings.map((listing: CarItem) => (
-                    <ListingComponent key={listing.id} listing={listing}/>
-                ))}
-            </div>
-        </div>
-    </div>
+    );
 }
-
-// export function DealerComponent({dealer}: { dealer:Dealership }) {
-//
-//     if (dealer.views > 0){
-//
-//
-//         return <div className={'flex justify-between bg-dark rounded-xl'}>
-//             <Link to={`/dealers/${dealer.id}`} className={'flex gap-1'}>
-//                 <Avatar shape={'circle'}/>
-//                 <Title level={5}>{dealer.name}</Title>
-//             </Link>
-//             <div>
-//                  <Button type={'primary'} ghost icon={<MessageOutlined/>}/>
-//             </div>
-//         </div>
-//     }
-//
-//
-//     return (<Link to={`/dealers/${dealer.id}`}
-//                   className={'flex flex-col items-center justify-center gap-2 bg-dark-400/50 hover:bg-dark-400/70 cursor-alias rounded-xl p-8'}>
-//         <Title level={3}>Dealer Profile</Title>
-//         <Avatar size={'large'} className={'h-20! w-20!'} src={dealer.profile} shape={'circle'}/>
-//         <Title level={5}>{dealer.name}</Title>
-//         <div className={'flex gap-4 items-center'}>
-//             <div><Title className={'leading-none! my-0! text-center'}>{dealer.listingCount}</Title>
-//                 <Text className={'leading-none! mt-0! mb-4! text-center'} type={'secondary'}>Listings</Text></div>
-//             <div><Title className={'leading-none! my-0! text-center'}>{dealer.soldCount}</Title>
-//                 <Text className={'leading-none! mt-0! mb-4! text-center'} type={'secondary'}>Sold Vehicles</Text></div>
-//             <div><Title className={'leading-none! my-0! text-center'}>{dealer.views}</Title>
-//                 <Text className={'leading-none! mt-0! mb-4! text-center'} type={'secondary'}>Views</Text></div>
-//
-//
-//         </div>
-//     </Link>)
-// }

@@ -1,6 +1,6 @@
 import Navbar from "@/components/navigation/navbar.tsx";
 import {Outlet, useLocation} from "react-router";
-import Footer from "@/components/footer.tsx";
+import Footer from "@/components/navigation/footer.tsx";
 import {useEffect} from "react";
 import {useAppDispatch} from "@/store/hooks.ts";
 import {autoLoginUser} from "@/store/reducers/authenticationSlice.ts";

@@ -57,10 +57,11 @@ export default function CustomCarousel({
             </div>
             <Carousel
                 ref={carouselRef}
-                className="!gap-4"
+                className="gap-4!"
                 slidesToShow={slidesToShow}
                 slidesToScroll={slidesToShow}
                 autoplay={autoPlay}
+                dots
                 infinite
                 swipe
             >

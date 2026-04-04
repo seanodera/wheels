@@ -1,12 +1,12 @@
 import {Avatar, Button, Empty, Typography} from "antd";
-import CustomCarousel from "@/components/customCarousel.tsx";
-import ListingComponent from "@/components/listingComponent.tsx";
+import CustomCarousel from "@/components/common/customCarousel.tsx";
+import ListingComponent from "@/components/listings/listingComponent.tsx";
 import {useEffect, useMemo, useState} from "react";
 import {useNavigate, useParams} from "react-router";
 import type {CarAuction, CarItem, Dealership} from "@/types";
 import {isCarAuction, supabase} from "@/utils";
 import {keysToCamelCase} from "@/utils/caseConverter.ts";
-import AuctionItem from "@/components/auctionItem.tsx";
+import AuctionItem from "@/components/auction/auctionItem.tsx";
 import LoadingScreen from "@/components/navigation/loadingScreen.tsx";
 import {SendOutlined} from "@ant-design/icons";
 import {useAppDispatch} from "@/store/hooks.ts";

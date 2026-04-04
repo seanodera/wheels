@@ -1,6 +1,6 @@
 import {Route, Routes} from 'react-router'
 import './App.css'
-import {App as AntApp, ConfigProvider, theme} from "antd";
+import {App as AntApp, ConfigProvider} from "antd";
 import MainShell from "./shells/mainShell.tsx";
 import HomeScreen from "./screens/homeScreen.tsx";
 import LoginScreen from "./screens/loginScreen.tsx";
@@ -18,12 +18,15 @@ import {useLocation} from "react-router";
 import {useEffect, useState} from "react";
 import LoadingScreen from "@/components/navigation/loadingScreen.tsx";
 import MessagesScreen from "@/screens/messages.tsx";
+import useGlassTheme from "@/glassTheme.ts";
+import SearchScreen from "@/screens/searchScreen.tsx";
 
 function App() {
     const currentTheme = useThemeManager();
-    const {darkAlgorithm, defaultAlgorithm} = theme;
     const location = useLocation();
     const [loading, setLoading] = useState(false);
+    const configTheme = useGlassTheme(currentTheme);
+
     useEffect(() => {
         setLoading(true);
         const id = setTimeout(() => setLoading(false), 50); // small delay to show loader
@@ -31,54 +34,12 @@ function App() {
     }, [location.pathname]);
 
     if (loading) return <LoadingScreen/>;
+
     return (
         <ConfigProvider
-            theme={
-                currentTheme === "light"
-                    ? {
-                        token: {
-                            colorPrimary: "#00e5ff",
-                            colorInfo: "#00e5ff",
-                            colorLink: "#00e5ff",
-                            borderRadius: 8,
-                            wireframe: false,
-
-                        },
-
-                        algorithm: defaultAlgorithm, // ✅ light algorithm
-                        components: {
-                            Button: {
-                                colorPrimary: "#001315"
-                            },
-                            Card: {
-                                lineType: ""
-                            },
-                            Layout: {
-                                headerBg: "#FFFFFF",
-                            }
-                        },
-                    }
-                    : {
-                        token: {
-                            colorPrimary: "#00e5ff",
-                            colorInfo: "#00e5ff",
-                            borderRadius: 8,
-                            wireframe: false,
-                            colorBgBase: "#000506",
-
-                        },
-                        algorithm: darkAlgorithm, // ✅ dark algorithm
-                        components: {
-                            Layout: {
-                                headerBg: "#040100",
-                            },
-                            Card: {
-                                lineType: ""
-                            }
-                        },
-                    }}
+            theme={configTheme}
         >
-            <div className={'bg-light-bg dark:text-white min-h-screen dark:bg-dark-bg transition-colors'}>
+            <div className={'glass-theme bg-light-bg dark:text-white min-h-screen dark:bg-dark-bg transition-colors'}>
 
                 <ErrorBoundary>
 
@@ -93,6 +54,7 @@ function App() {
                                     <Route path={'/auction/:id'} element={<AuctionScreen/>}/>
                                     <Route path={'/auctions'} element={<AuctionsScreen/>}/>
                                     <Route path={'/listings'} element={<ListingsScreen/>}/>
+                                    <Route path={'/search'} element={<SearchScreen/>}/>
                                     <Route path={'/listing/:id'} element={<ListingScreen/>}/>
                                     <Route path={'/profile'} element={<ProfileScreen/>}/>
                                 </Route>

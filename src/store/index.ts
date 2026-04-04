@@ -6,6 +6,7 @@ import mainSlice from "@/store/reducers/mainSlice.ts";
 import dealerSlice from "@/store/reducers/dealerslice.ts"; // Adjust path based on your folder structure
 import auctionReducer from "@/store/reducers/auctionSlice.ts";
 import messageSlice from "@/store/reducers/messageSlice.ts";
+import searchReducer from "@/store/reducers/searchSlice.ts";
 
 
 
@@ -18,7 +19,8 @@ export const store = configureStore({
         main: mainSlice.reducer,
         dealer: dealerSlice.reducer,
         auction: auctionReducer,
-        messages: messageSlice.reducer
+        messages: messageSlice.reducer,
+        search: searchReducer,
 
     },
 });
@@ -33,4 +35,5 @@ export * from './reducers/listingSlice'
 export * from './reducers/auctionSlice'
 export * from './reducers/dealerslice'
 export * from './reducers/messageSlice'
+export * from './reducers/searchSlice'
 export * from './hooks'

@@ -1,5 +1,5 @@
 import {useEffect, useMemo, useState} from "react";
-import AuctionItem from "@/components/auctionItem.tsx";
+import AuctionItem from "@/components/auction/auctionItem.tsx";
 import {Select, Tabs, Typography} from "antd";
 import {useAppDispatch, useAppSelector} from "@/store/hooks.ts";
 import {fetchAuctionsAsync} from "@/store/reducers/auctionSlice.ts";

@@ -9,10 +9,21 @@ export default function Footer() {
         <div className=" bg-primary dark:bg-dark pt-16 py-4 px-16">
             <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
                 {/* Logo Section */}
-                <div className="flex gap-2 items-center">
-                    <Avatar shape="square" size="large" src={<LogoComponent className="text-primary" />} />
-                    <Title className="leading-none my-0!" level={4}>Wheela</Title>
+                <div>
+                    <div className="flex gap-2 items-center">
+                        <Avatar className={'animate-spin duration-[5000]!'} shape="square" size="large" src={<LogoComponent className="text-primary" />} />
+                        <div>
+                            <Title className="leading-none my-0!" level={4}>Wheels</Title>
+                            <Text className="text-xs uppercase tracking-[0.22em] text-white/65">
+                                By Serid
+                            </Text>
+                        </div>
+                    </div>
+                    <Text className="mt-4 block max-w-xs text-sm text-white/70">
+                        Wheels is Serid's automotive marketplace for listings, live auctions, and dealer discovery.
+                    </Text>
                 </div>
+
 
                 {/* How It Works */}
                 <FooterSection title="How It Works">
@@ -29,7 +40,7 @@ export default function Footer() {
                 </FooterSection>
 
                 {/* Company */}
-                <FooterSection title="Wheela">
+                <FooterSection title="Wheels">
                     <FooterItem to="/about">About Us</FooterItem>
                     <FooterItem to="/contact">Contact</FooterItem>
                     <FooterItem to="/faq">FAQ</FooterItem>
@@ -40,7 +51,7 @@ export default function Footer() {
             </div>
             <div className={'flex flex-col-reverse md:grid md:grid-cols-3 py-4 mt-8'}>
                 <div className={'leading-none mx-auto my-0!'}></div>
-                <Text className={'leading-none mx-auto my-0! text-center'} type={'secondary'}>&copy; Copyright 2025 Wheela</Text>
+                <Text className={'leading-none mx-auto my-0! text-center'} type={'secondary'}>&copy; Copyright 2025 Serid · Wheels</Text>
                 <div className={'flex flex-col md:flex-row justify-end gap-2'}>
                     <FooterItem to={'/cookies'} className={'text-gray-500 hover:text-primary'} activeClassName={'text-white'}>Cookies
                         Policy</FooterItem>

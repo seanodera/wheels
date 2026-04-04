@@ -1,10 +1,8 @@
 import {useParams} from "react-router";
-import {useEffect, useMemo, useRef, useState} from "react";
-import type {CarAuction, CarItem} from "@/types";
+import {useEffect, useRef, useState} from "react";
 import {Button, Empty, Typography} from "antd";
 import {SendOutlined, StarOutlined} from "@ant-design/icons";
-import {startCase} from "lodash";
-import AuctionItem from "@/components/auctionItem.tsx";
+import AuctionItem from "@/components/auction/auctionItem.tsx";
 import {trackVehicleView} from "@/utils";
 import {useAppDispatch, useAppSelector} from "@/store/hooks.ts";
 import {fetchAuctionsAsync, setCurrentAuctionAsync} from "@/store/reducers/auctionSlice.ts";
@@ -12,11 +10,11 @@ import LoadingScreen from "@/components/navigation/loadingScreen.tsx";
 import AuctionBidComponent from "@/components/auction/auctionBidComponent.tsx";
 import {DealerComponent} from "@/components/dealer/dealerComponent.tsx";
 import ImageSection from "@/components/common/imageSection.tsx";
+import {VehicleDetails} from "@/components/common/vehicleDetails.tsx";
+import {VehicleDescription} from "@/components/common/vehicleDescription.tsx";
 
-const {Title, Text, Paragraph} = Typography;
+const {Title, Text} = Typography;
 
-const asMileage = (listing: CarAuction) =>
-    Number((listing as unknown as { millage?: number | string }).millage ?? listing.mileage ?? 0);
 
 export default function AuctionScreen() {
     const {id} = useParams<{ id: string }>();
@@ -24,8 +22,8 @@ export default function AuctionScreen() {
     const {
         currentAuction,
         currentAuctionLoading,
-        endingSoon,
-        newlyListed,
+        relatedEndingSoon,
+        relatedNewlyListed,
         error,
         auctionsFetched
     } = useAppSelector((state) => state.auction);
@@ -62,15 +60,6 @@ export default function AuctionScreen() {
         });
     }, [listing?.id, listing?.sellerId, userId]);
 
-    const relatedEndingSoon = useMemo(
-        () => endingSoon.filter((item: CarAuction) => String(item.id) !== String(listing?.id)).slice(0, 8),
-        [endingSoon, listing?.id]
-    );
-    const relatedNewlyListed = useMemo(
-        () => newlyListed.filter((item: CarAuction) => String(item.id) !== String(listing?.id)).slice(0, 8),
-        [newlyListed, listing?.id]
-    );
-
     if (currentAuctionLoading) {
         return <LoadingScreen/>;
     }
@@ -79,12 +68,12 @@ export default function AuctionScreen() {
         return <Empty description={error || "Invalid auction item"}/>;
     }
 
-    const mileage = asMileage(listing);
 
     return (
         <div className="px-4 py-4 text-current lg:px-8 xl:px-12">
-            <div className="mx-auto flex w-full max-w-360 flex-col gap-6">
-                <div className="flex flex-col gap-4 rounded-2xl bg-[#f8f4ec] glass-card dark:bg-dark p-5 md:flex-row md:items-end md:justify-between md:p-6">
+            <div className="mx-auto flex w-full flex-col gap-6">
+                <div
+                    className="flex flex-col gap-4 rounded-2xl bg-light-accent glass-card dark:bg-dark p-5 md:flex-row md:items-end md:justify-between md:p-6">
                     <div className="min-w-0">
                         <Text className="text-[11px]! uppercase tracking-[0.38em]">
                             Live Auction
@@ -93,7 +82,7 @@ export default function AuctionScreen() {
                             {listing.year} {listing.brand} {listing.model}
                         </Title>
                         <Text className="mt-3 block ">
-                            {mileage} KM · {listing.engine} · {listing.transmission} · {listing.drivetrain}
+                            {listing.mileage} KM · {listing.engine} · {listing.transmission} · {listing.drivetrain}
                         </Text>
                     </div>
                     <div className="grid w-full grid-cols-2 gap-2 md:flex md:w-auto">
@@ -120,26 +109,23 @@ export default function AuctionScreen() {
 
                 <ImageSection listing={listing}/>
 
-                <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.55fr)_380px]">
-                    <div className="order-1 space-y-6">
+                <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.5fr)_380px] 2xl:gap-12 2xl:grid-cols-6">
+                    <div className="order-1 space-y-6 2xl:space-y-12 2xl:col-span-4 xl:sticky xl:top-6 xl:self-start">
                         <AuctionBidComponent listing={listing} viewCount={viewCount}/>
 
-                        <div className="rounded-[28px] border bg-[#f8f4ec] glass-card dark:bg-dark p-5 md:p-7">
-                            <Title level={4} className="mb-6! ">
-                                Description
-                            </Title>
-                            <AuctionDescription listing={listing}/>
-                        </div>
+                        <VehicleDetails listing={listing}/>
+
+                        <VehicleDescription listing={listing}/>
 
                         {listing.video.length > 0 && (
-                            <div className="rounded-[28px] border border-black/10 bg-white p-5 md:p-7">
+                            <div className="rounded-2xl border border-black/10 bg-white p-5 md:p-7">
                                 <Title level={4} className="mb-6! text-black">
                                     Videos
                                 </Title>
                                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                    {listing.video.map((video: string, index: number) => (
+                                    {listing.video.map((video, index: number) => (
                                         <video
-                                            src={video}
+                                            src={video.url}
                                             key={index}
                                             controls
                                             className="w-full rounded-2xl bg-black"
@@ -155,7 +141,7 @@ export default function AuctionScreen() {
                                     New Listings
                                 </Title>
                                 <div className="grid grid-cols-1 gap-5 md:grid-cols-2 2xl:grid-cols-4">
-                                    {relatedNewlyListed.map((auction: CarAuction) => (
+                                    {relatedNewlyListed.map((auction) => (
                                         <AuctionItem key={auction.id} listing={auction}/>
                                     ))}
                                 </div>
@@ -163,16 +149,16 @@ export default function AuctionScreen() {
                         )}
                     </div>
 
-                    <aside className="order-2 space-y-6 xl:sticky xl:top-6 xl:self-start">
+                    <aside className="order-2 space-y-6 2xl:col-span-2  xl:sticky xl:top-6 xl:self-start">
                         {listing.seller.name && <DealerComponent dealer={listing.seller} listing={listing}/>}
 
                         {relatedEndingSoon.length > 0 && (
-                            <div className="space-y-4 rounded-[28px] border border-black/10 bg-[#f8f4ec] p-5 md:p-6">
+                            <div className="space-y-4 rounded-2xl border border-black/10 bg-light-accent p-5 md:p-6">
                                 <Title className="mb-0! text-black" level={4}>
                                     Ending Soon
                                 </Title>
                                 <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-1">
-                                    {relatedEndingSoon.map((auction: CarAuction) => (
+                                    {relatedEndingSoon.map((auction) => (
                                         <AuctionItem key={auction.id} listing={auction}/>
                                     ))}
                                 </div>
@@ -181,23 +167,6 @@ export default function AuctionScreen() {
                     </aside>
                 </div>
             </div>
-        </div>
-    );
-}
-
-export function AuctionDescription({listing}: { listing: CarAuction | CarItem }) {
-    const {description} = listing;
-
-    return (
-        <div className="space-y-8">
-            {Object.entries(description).map(([key, value]) =>
-                value ? (
-                    <div key={key}>
-                        <Title level={4}>{startCase(key)}</Title>
-                        <Paragraph>{String(value)}</Paragraph>
-                    </div>
-                ) : null
-            )}
         </div>
     );
 }

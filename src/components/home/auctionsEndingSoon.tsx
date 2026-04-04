@@ -1,5 +1,5 @@
-import CustomCarousel from "@/components/customCarousel.tsx";
-import AuctionItem from "@/components/auctionItem.tsx";
+import CustomCarousel from "@/components/common/customCarousel.tsx";
+import AuctionItem from "@/components/auction/auctionItem.tsx";
 import {useAppSelector} from "@/store/hooks.ts";
 
 

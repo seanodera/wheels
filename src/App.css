@@ -1,0 +1,137 @@
+.glass-theme {
+    --glass-shadow:
+        var(--ant-box-shadow-secondary),
+        inset 0 0 5px 2px rgba(255, 255, 255, 0.3),
+        inset 0 5px 2px rgba(255, 255, 255, 0.2);
+    --glass-surface: color-mix(in srgb, var(--ant-color-bg-container) 15%, transparent);
+    --glass-surface-strong: color-mix(in srgb, var(--ant-color-bg-container) 40%, transparent);
+    text-shadow: 0 1px rgba(0, 0, 0, 0.1);
+}
+
+.glass-theme .ant-card,
+.glass-theme .ant-input,
+.glass-theme .ant-input-affix-wrapper,
+.glass-theme .ant-input-number,
+.glass-theme .ant-input-number-affix-wrapper,
+.glass-theme .ant-picker,
+.glass-theme .ant-select-selector,
+.glass-theme .ant-segmented,
+.glass-theme .ant-switch,
+.glass-theme .ant-progress-inner,
+.glass-theme .ant-btn-default,
+.glass-theme .ant-btn-color-default,
+.glass-theme .ant-btn-variant-outlined,
+.glass-theme .ant-btn-variant-filled {
+    box-shadow: var(--glass-shadow);
+}
+
+.glass-theme .ant-card,
+.glass-theme .ant-input,
+.glass-theme .ant-input-affix-wrapper,
+.glass-theme .ant-input-number,
+.glass-theme .ant-input-number-affix-wrapper,
+.glass-theme .ant-picker,
+.glass-theme .ant-select-selector,
+.glass-theme .ant-dropdown .ant-dropdown-menu,
+.glass-theme .ant-popover-inner,
+.glass-theme .ant-picker-dropdown .ant-picker-panel-container,
+.glass-theme .ant-select-dropdown,
+.glass-theme .ant-color-picker-panel,
+.glass-theme .ant-segmented .ant-segmented-thumb,
+.glass-theme .ant-segmented .ant-segmented-item-selected {
+    background: var(--glass-surface);
+    backdrop-filter: blur(12px);
+}
+
+.glass-theme .ant-card {
+    background-color: var(--glass-surface-strong);
+}
+
+.glass-theme .ant-btn-default,
+.glass-theme .ant-btn-color-default,
+.glass-theme .ant-btn-variant-outlined,
+.glass-theme .ant-btn-variant-filled {
+    background: transparent;
+    color: var(--ant-color-text);
+}
+
+.glass-theme .ant-btn-default:hover,
+.glass-theme .ant-btn-color-default:hover,
+.glass-theme .ant-btn-variant-outlined:hover,
+.glass-theme .ant-btn-variant-filled:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: color-mix(in srgb, var(--ant-color-text) 90%, transparent);
+}
+
+.glass-theme .ant-btn-default:active,
+.glass-theme .ant-btn-color-default:active,
+.glass-theme .ant-btn-variant-outlined:active,
+.glass-theme .ant-btn-variant-filled:active {
+    background: rgba(255, 255, 255, 0.1);
+    color: color-mix(in srgb, var(--ant-color-text) 80%, transparent);
+}
+
+.glass-theme .ant-dropdown,
+.glass-theme .ant-popover,
+.glass-theme .ant-picker-dropdown,
+.glass-theme .ant-select-dropdown,
+.glass-theme .ant-color-picker-dropdown {
+    --glass-popup-bg: var(--glass-surface);
+}
+
+.glass-theme .ant-dropdown .ant-dropdown-menu,
+.glass-theme .ant-popover-inner,
+.glass-theme .ant-picker-dropdown .ant-picker-panel-container,
+.glass-theme .ant-select-dropdown,
+.glass-theme .ant-color-picker-panel {
+    border-radius: var(--ant-border-radius-lg);
+}
+
+.glass-theme .ant-dropdown .ant-dropdown-menu,
+.glass-theme .ant-select-dropdown,
+.glass-theme .ant-picker-dropdown .ant-picker-panel-container,
+.glass-theme .ant-color-picker-panel,
+.glass-theme .ant-alert,
+.glass-theme .ant-modal .ant-modal-content {
+    backdrop-filter: none;
+}
+
+.glass-theme .ant-dropdown .ant-dropdown-menu,
+.glass-theme .ant-select-dropdown .ant-select-item,
+.glass-theme .ant-popover-inner-content,
+.glass-theme .ant-picker-dropdown .ant-picker-cell,
+.glass-theme .ant-color-picker-panel {
+    background: transparent;
+}
+
+.glass-theme .ant-radio-button-wrapper {
+    box-shadow: var(--glass-shadow);
+    background: transparent;
+    border-color: rgba(255, 255, 255, 0.2);
+    color: var(--ant-color-text);
+}
+
+.glass-theme .ant-radio-button-wrapper:hover {
+    border-color: rgba(255, 255, 255, 0.24);
+    color: var(--ant-color-text);
+}
+
+.glass-theme .ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled) {
+    background: var(--glass-surface);
+    border-color: rgba(255, 255, 255, 0.28);
+    color: var(--ant-color-text);
+    backdrop-filter: blur(12px);
+}
+
+.glass-theme .ant-radio-button-wrapper-checked:not(.ant-radio-button-wrapper-disabled)::before {
+    background-color: rgba(255, 255, 255, 0.18);
+}
+
+.glass-theme .ant-progress-bg,
+.glass-theme .ant-progress-success-bg {
+    min-height: 12px !important;
+}
+
+.glass-theme .ant-progress-inner {
+    min-height: 12px;
+}

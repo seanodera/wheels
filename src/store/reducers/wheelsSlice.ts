@@ -35,7 +35,7 @@ const initialState: WheelsState = {
 type HomeCuratedPayload = {
     featured_listings: (CarItem | CarAuction)[];
     ending_soon: CarAuction[];
-    new_listings:(CarItem | CarAuction)[];
+    new_listings: (CarItem | CarAuction)[];
     new_dealers: Dealership[];
     popular_listings: CarItem[];
     popular_dealers: Dealership[];
@@ -49,8 +49,42 @@ const isAuctionLike = (value: unknown) => {
     return record.type === "auction" || "startingBid" in record || "starting_bid" in record || "current_bid" in record;
 };
 
+const uniqueById = <T extends {id: string | number}>(items: T[]) => {
+    const seen = new Set<string>();
+    return items.filter((item) => {
+        const key = String(item.id);
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+    });
+};
+
+const takeFill = <T extends {id: string | number}>(primary: T[], fallback: T[], limit: number) =>
+    uniqueById([...primary, ...fallback]).slice(0, limit);
+
+const sortListingsByPopularity = (items: CarItem[]) =>
+    [...items].sort((a, b) =>
+        (Number(b.views ?? 0) + Number(b.favorites ?? 0)) - (Number(a.views ?? 0) + Number(a.favorites ?? 0))
+    );
+
+const sortListingsByCreated = (items: CarItem[]) =>
+    [...items].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+const sortAuctionsByEnding = (items: CarAuction[]) =>
+    [...items].sort((a, b) => new Date(a.ending).getTime() - new Date(b.ending).getTime());
+
+const sortDealersByViews = (items: Dealership[]) =>
+    [...items].sort((a, b) => Number(b.views ?? 0) - Number(a.views ?? 0));
+
+const sortDealersByCreated = (items: Dealership[]) =>
+    [...items].sort((a, b) => {
+        const aTime = Date.parse((a as unknown as {createdAt?: string}).createdAt ?? "");
+        const bTime = Date.parse((b as unknown as {createdAt?: string}).createdAt ?? "");
+        return (Number.isNaN(bTime) ? 0 : bTime) - (Number.isNaN(aTime) ? 0 : aTime);
+    });
+
 export const fetchHomeData = createAsyncThunk<HomeCuratedPayload, void, {rejectValue: string}>('wheels/fetchHomeData',
-    async (_, {rejectWithValue,dispatch}) => {
+    async (_, {rejectWithValue, dispatch}) => {
         try {
             const [
                 featuredResponse,
@@ -58,7 +92,10 @@ export const fetchHomeData = createAsyncThunk<HomeCuratedPayload, void, {rejectV
                 newListingsResponse,
                 popularListingsResponse,
                 newDealersResponse,
-                popularDealersResponse
+                popularDealersResponse,
+                fallbackListingsResponse,
+                fallbackAuctionsResponse,
+                fallbackDealersResponse,
             ] = await Promise.all([
                 supabase
                     .from("vehicles")
@@ -94,39 +131,89 @@ export const fetchHomeData = createAsyncThunk<HomeCuratedPayload, void, {rejectV
                     .from("dealerships")
                     .select("*")
                     .order("views", {ascending: false})
-                    .limit(8)
+                    .limit(8),
+                supabase
+                    .from("listings")
+                    .select("*, vehicle:vehicles!inner(*, seller:dealerships(*))")
+                    .eq("vehicle.published", true)
+                    .order("created_at", {ascending: false})
+                    .limit(24),
+                supabase
+                    .from("auctions")
+                    .select("*, vehicle:vehicles!inner(*, seller:dealerships(*))")
+                    .eq("vehicle.published", true)
+                    .order("created_at", {ascending: false})
+                    .limit(24),
+                supabase
+                    .from("dealerships")
+                    .select("*")
+                    .limit(24),
             ]);
 
-            const hasAnyError = [
+            const messages = [
                 featuredResponse.error,
                 endingSoonResponse.error,
                 newListingsResponse.error,
                 popularListingsResponse.error,
                 newDealersResponse.error,
-                popularDealersResponse.error
-            ].some(Boolean);
+                popularDealersResponse.error,
+                fallbackListingsResponse.error,
+                fallbackAuctionsResponse.error,
+                fallbackDealersResponse.error,
+            ]
+                .map((error, index) => {
+                    if (!error?.message) return null;
+                    const labels = [
+                        "featured_listings",
+                        "ending_soon",
+                        "new_listings",
+                        "popular_listings",
+                        "new_dealers",
+                        "popular_dealers",
+                        "fallback_listings",
+                        "fallback_auctions",
+                        "fallback_dealers",
+                    ];
+                    return `${labels[index]}: ${error.message}`;
+                })
+                .filter(Boolean)
+                .join(" | ");
 
-            if (hasAnyError) {
-                const messages = [
-                    featuredResponse.error?.message ? `featured_listings: ${featuredResponse.error.message}` : null,
-                    endingSoonResponse.error?.message ? `ending_soon: ${endingSoonResponse.error.message}` : null,
-                    newListingsResponse.error?.message ? `new_listings: ${newListingsResponse.error.message}` : null,
-                    popularListingsResponse.error?.message ? `popular_listings: ${popularListingsResponse.error.message}` : null,
-                    newDealersResponse.error?.message ? `new_dealers: ${newDealersResponse.error.message}` : null,
-                    popularDealersResponse.error?.message ? `popular_dealers: ${popularDealersResponse.error.message}` : null
-                ].filter(Boolean).join(" | ");
+            const featuredListingsRaw = (featuredResponse.data ?? []).map((item) =>
+                isAuctionLike(item) ? toCarAuction(item) : toCarItem(item)
+            );
+            const endingSoonRaw = (endingSoonResponse.data ?? []).map(toCarAuction);
+            const newListingsRaw = (newListingsResponse.data ?? []).map((item) => isCarAuction(item) ? toCarAuction(item) : toCarItem(item));
+            const popularListingsRaw = (popularListingsResponse.data ?? []).map(toCarItem);
+            const newDealersRaw = (newDealersResponse.data ?? []).map(toDealership);
+            const popularDealersRaw = (popularDealersResponse.data ?? []).map(toDealership);
+            const fallbackListings = (fallbackListingsResponse.data ?? []).map(toCarItem);
+            const fallbackAuctions = (fallbackAuctionsResponse.data ?? []).map(toCarAuction);
+            const fallbackDealers = (fallbackDealersResponse.data ?? []).map(toDealership);
 
+            const endingSoon = takeFill(endingSoonRaw, sortAuctionsByEnding(fallbackAuctions), 10);
+            const newListings = takeFill(newListingsRaw, sortListingsByCreated(fallbackListings), 10);
+            const popularListings = takeFill(popularListingsRaw, sortListingsByPopularity(fallbackListings), 10);
+            const newDealers = takeFill(newDealersRaw, sortDealersByCreated(fallbackDealers), 8);
+            const popularDealers = takeFill(popularDealersRaw, sortDealersByViews(fallbackDealers), 8);
+            const featuredFallback = uniqueById<(CarItem | CarAuction)>([
+                ...endingSoon,
+                ...newListings,
+                ...popularListings,
+            ]);
+            const featuredListings = takeFill(featuredListingsRaw, featuredFallback, 10);
+
+            if (
+                !featuredListings.length &&
+                !endingSoon.length &&
+                !newListings.length &&
+                !popularListings.length &&
+                !newDealers.length &&
+                !popularDealers.length
+            ) {
                 return rejectWithValue(messages || "Failed to fetch curated home data from Supabase");
             }
 
-            const featuredListings = (featuredResponse.data ?? []).map((item) =>
-                isAuctionLike(item) ? toCarAuction(item) : toCarItem(item)
-            );
-            const endingSoon = (endingSoonResponse.data ?? []).map(toCarAuction);
-            const newListings = (newListingsResponse.data ?? []).map((item) => isCarAuction(item)? toCarAuction(item) :toCarItem(item));
-            const popularListings = (popularListingsResponse.data ?? []).map(toCarItem);
-            const newDealers = (newDealersResponse.data ?? []).map(toDealership);
-            const popularDealers = (popularDealersResponse.data ?? []).map(toDealership);
             dispatch(setEndingSoon(endingSoon))
             return {
                 featured_listings: featuredListings,

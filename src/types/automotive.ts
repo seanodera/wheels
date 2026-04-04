@@ -1,4 +1,3 @@
-import type {CommentItem} from "./users";
 import type {Dealership} from "@/types/dealership.ts";
 import {Profile} from "@/types/profile.ts";
 
@@ -57,9 +56,12 @@ export interface BaseCar {
     leadCount?: number;
     watchCount?: number;
     favorites?: number;
-    comments?: CommentItem[];
     description: CarDescription;
-    video: string[];
+    video: {
+        url: string;
+        thumbnail?: string;
+        title: string;
+    }[];
     tags: string[];
     createdAt: string;
     seller: Dealership;

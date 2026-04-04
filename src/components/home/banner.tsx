@@ -1,4 +1,4 @@
-import CustomCarousel from "@/components/customCarousel.tsx";
+import CustomCarousel from "@/components/common/customCarousel.tsx";
 import CarouselItem from "@/components/common/carouselItem.tsx";
 import {useAppSelector} from "@/store/hooks.ts";
 

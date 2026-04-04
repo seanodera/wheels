@@ -3,8 +3,8 @@ import {useEffect, useMemo, useState, type ReactNode} from "react";
 import {useLocation, useNavigate} from "react-router";
 import {formatDate} from "date-fns";
 import {UserOutlined} from "@ant-design/icons";
-import ListingComponent from "@/components/listingComponent.tsx";
-import AuctionItem from "@/components/auctionItem.tsx";
+import ListingComponent from "@/components/listings/listingComponent.tsx";
+import AuctionItem from "@/components/auction/auctionItem.tsx";
 import type {CarAuction, CarItem} from "@/types";
 import {useAppDispatch, useAppSelector} from "@/store/hooks.ts";
 import {

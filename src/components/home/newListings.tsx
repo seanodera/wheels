@@ -1,7 +1,7 @@
-import CustomCarousel from "@/components/customCarousel.tsx";
-import ListingComponent from "@/components/listingComponent.tsx";
+import CustomCarousel from "@/components/common/customCarousel.tsx";
+import ListingComponent from "@/components/listings/listingComponent.tsx";
 import {useAppSelector} from "@/store/hooks.ts";
-import AuctionItem from "@/components/auctionItem.tsx";
+import AuctionItem from "@/components/auction/auctionItem.tsx";
 import {isCarAuction} from "@/utils";
 
 export default function NewListings() {

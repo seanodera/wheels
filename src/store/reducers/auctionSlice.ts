@@ -11,6 +11,9 @@ interface AuctionState {
     noReserve: CarAuction[];
     lowestMileage: CarAuction[];
     inspected: CarAuction[];
+    relatedEndingSoon: CarAuction[];
+    relatedNewlyListed: CarAuction[];
+    relatedReferenceId: string | null;
     currentAuction: CarAuction | null;
     loading: boolean;
     currentAuctionLoading: boolean;
@@ -28,6 +31,9 @@ const initialState: AuctionState = {
     noReserve: [],
     lowestMileage: [],
     inspected: [],
+    relatedEndingSoon: [],
+    relatedNewlyListed: [],
+    relatedReferenceId: null,
     currentAuction: null,
     loading: false,
     currentAuctionLoading: false,
@@ -38,6 +44,9 @@ const initialState: AuctionState = {
 
 
 const deriveCollections = (auctions: CarAuction[]) => {
+    const endingSoon = [...auctions]
+        .sort((a, b) => new Date(a.ending).getTime() - new Date(b.ending).getTime());
+
     const newlyListed = [...auctions]
         .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
@@ -52,7 +61,25 @@ const deriveCollections = (auctions: CarAuction[]) => {
 
     const inspected = auctions.filter((auction) => Boolean(auction.verified));
 
-    return {newlyListed, noReserve, lowestMileage, inspected};
+    return {endingSoon, newlyListed, noReserve, lowestMileage, inspected};
+};
+
+const deriveRelatedAuctions = (items: CarAuction[], currentAuctionId?: string | null, limit = 8) => {
+    if (!currentAuctionId) return items.slice(0, limit);
+    return items.filter((item) => String(item.id) !== String(currentAuctionId)).slice(0, limit);
+};
+
+const syncAuctionCollections = (state: AuctionState) => {
+    const derived = deriveCollections(state.auctions);
+    state.endingSoon = derived.endingSoon;
+    state.newlyListed = derived.newlyListed;
+    state.noReserve = derived.noReserve;
+    state.lowestMileage = derived.lowestMileage;
+    state.inspected = derived.inspected;
+
+    const relatedReferenceId = state.relatedReferenceId ?? state.currentAuction?.id ?? null;
+    state.relatedEndingSoon = deriveRelatedAuctions(state.endingSoon, relatedReferenceId);
+    state.relatedNewlyListed = deriveRelatedAuctions(state.newlyListed, relatedReferenceId);
 };
 
 async function fetchAuctionByVehicleId(vehicleId: string) {
@@ -102,19 +129,10 @@ type PlaceBidResult = {
 function applyAuctionUpdate(state: AuctionState, updatedAuction: CarAuction) {
     state.currentAuction = updatedAuction;
 
-    const replaceAuction = (items: CarAuction[]) =>
-        items.some((auction) => auction.id === updatedAuction.id)
-            ? items.map((auction) => auction.id === updatedAuction.id ? updatedAuction : auction)
-            : items;
-
     state.auctions = state.auctions.some((auction) => auction.id === updatedAuction.id)
         ? state.auctions.map((auction) => auction.id === updatedAuction.id ? updatedAuction : auction)
         : [...state.auctions, updatedAuction];
-    state.endingSoon = replaceAuction(state.endingSoon);
-    state.newlyListed = replaceAuction(state.newlyListed);
-    state.noReserve = replaceAuction(state.noReserve);
-    state.lowestMileage = replaceAuction(state.lowestMileage);
-    state.inspected = replaceAuction(state.inspected);
+    syncAuctionCollections(state);
 }
 
 export const fetchAuctionsAsync = createAsyncThunk<CarAuction[], void, { rejectValue: string }>(
@@ -293,10 +311,22 @@ const auctionSlice = createSlice({
     reducers: {
         clearCurrentAuction: (state) => {
             state.currentAuction = null;
+            state.relatedReferenceId = null;
+            state.relatedEndingSoon = [];
+            state.relatedNewlyListed = [];
         },
         setEndingSoon: (state, action) => {
             state.endingSoon = action.payload;
-        }
+            state.relatedEndingSoon = deriveRelatedAuctions(
+                state.endingSoon,
+                state.relatedReferenceId ?? state.currentAuction?.id
+            );
+        },
+        setRelatedAuctionReferenceId: (state, action: {payload: string | null}) => {
+            state.relatedReferenceId = action.payload;
+            state.relatedEndingSoon = deriveRelatedAuctions(state.endingSoon, action.payload);
+            state.relatedNewlyListed = deriveRelatedAuctions(state.newlyListed, action.payload);
+        },
     },
     extraReducers: (builder) => {
         builder
@@ -307,11 +337,7 @@ const auctionSlice = createSlice({
             .addCase(fetchAuctionsAsync.fulfilled, (state, action) => {
                 state.loading = false;
                 state.auctions = action.payload;
-                const derived = deriveCollections(action.payload);
-                state.newlyListed = derived.newlyListed;
-                state.noReserve = derived.noReserve;
-                state.lowestMileage = derived.lowestMileage;
-                state.inspected = derived.inspected;
+                syncAuctionCollections(state);
                 state.auctionsFetched = true;
             })
             .addCase(fetchAuctionsAsync.rejected, (state, action) => {
@@ -368,12 +394,13 @@ const auctionSlice = createSlice({
 
                 if (!state.currentAuction) return
                 console.log(action.payload);
-                state.currentAuction = {
+                const updatedAuction = {
                     ...state.currentAuction,
                     currentBid: action.payload.bid.amount,
                     bids: [action.payload.bid, ...(state.currentAuction.bids ?? [])],
                     totalBids: action.payload.count
-                }
+                };
+                applyAuctionUpdate(state, updatedAuction);
                 state.topBidderLoading = false
             })
             .addCase(fetchTopBidder.rejected, (state, action) => {
@@ -383,5 +410,5 @@ const auctionSlice = createSlice({
     }
 });
 
-export const {clearCurrentAuction, setEndingSoon} = auctionSlice.actions;
+export const {clearCurrentAuction, setEndingSoon, setRelatedAuctionReferenceId} = auctionSlice.actions;
 export default auctionSlice.reducer;

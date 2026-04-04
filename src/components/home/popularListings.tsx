@@ -1,6 +1,6 @@
-import CustomCarousel from "@/components/customCarousel.tsx";
+import CustomCarousel from "@/components/common/customCarousel.tsx";
 import {useAppSelector} from "@/store/hooks.ts";
-import ListingComponent from "@/components/listingComponent.tsx";
+import ListingComponent from "@/components/listings/listingComponent.tsx";
 
 export default function PopularListings(){
     const {popularListings} = useAppSelector(state => state.wheels);
