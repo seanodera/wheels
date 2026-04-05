@@ -143,12 +143,12 @@ export default function ListingScreen() {
                                             <ClockCircleOutlined/> Date Posted
                                         </Title>
                                         <Title className="leading-none my-0!" level={5}>
-                                            {formatDate(listing.createdAt, "HH:mm dd MMM yy")}
+                                            {formatDate(new Date(listing.createdAt), "eee, MMM dd yyyy • hh:mm a")}
                                         </Title>
                                     </div>
                                     <div>
                                         <Title className="leading-none my-0! " type="secondary" level={5}>
-                                            <ArrowUpOutlined/> Price
+                                            <ArrowUpOutlined/> Asking Price
                                         </Title>
                                         <Title className="leading-none my-0!" level={5}>
                                             KSH {toMoneyFormat(listing.price)}
@@ -156,27 +156,29 @@ export default function ListingScreen() {
                                     </div>
                                     <div>
                                         <Title className="leading-none my-0! " type="secondary" level={5}>
-                                            Negotiable
+                                            Offer Flexibility
                                         </Title>
                                         <Title className="leading-none my-0!" level={5}>
-                                            {listing.negotiable ? "Yes" : "No"}
+                                            {listing.negotiable ? "Negotiable" : "Fixed price"}
                                         </Title>
                                     </div>
                                 </div>
 
-                                <div className="flex flex-col gap-4 py-6 lg:flex-row lg:justify-between">
+                                <div className="flex flex-col justify-between gap-4 py-4 lg:flex-row">
                                     <div>
-                                        <Title level={1} className="mb-0!">
+                                        <div className="mb-2 flex items-center gap-2">
+                                            <Title className="leading-none my-0!" level={4}>Current Asking Price</Title>
+                                        </div>
+                                        <Title level={1} className="leading-none! mb-2!">
                                             KSH {toMoneyFormat(listing.price)}
                                         </Title>
-                                        {/*<Text className="mt-2 block text-black/55">*/}
-                                        {/*    Serious offers only*/}
-                                        {/*    Serious offers only*/}
-                                        {/*</Text>*/}
+                                        <Text className="block max-w-md text-black/55 dark:text-white/60">
+                                            Send a direct offer to the seller and start the conversation around this vehicle.
+                                        </Text>
                                     </div>
 
                                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                                        <div className="rounded-2xl border border-black/10 bg-black/3 px-4 py-3">
+                                        <div className="rounded-2xl border border-black/10 bg-black/3 dark:bg-white/40 glass-card px-4 py-3">
                                             <Text className="mb-1 block text-[11px]! uppercase tracking-[0.22em] text-black/45">
                                                 Seller
                                             </Text>
@@ -188,7 +190,7 @@ export default function ListingScreen() {
                                             </div>
                                         </div>
 
-                                        <div className="rounded-2xl border border-black/10 bg-black/3 px-4 py-3">
+                                        <div className="rounded-2xl border border-black/10 bg-black/3 dark:bg-white/40 glass-card px-4 py-3">
                                             <Text className="mb-1 block text-[11px]! uppercase tracking-[0.22em] text-black/45">
                                                 Posted
                                             </Text>
@@ -197,7 +199,7 @@ export default function ListingScreen() {
                                             </Text>
                                         </div>
 
-                                        <div className="rounded-2xl border border-black/10 bg-black/3 px-4 py-3">
+                                        <div className="rounded-2xl border border-black/10 bg-black/3 dark:bg-white/40 glass-card px-4 py-3">
                                             <Text className="mb-1 block text-[11px]! uppercase tracking-[0.22em] text-black/45">
                                                 Views
                                             </Text>
@@ -206,7 +208,7 @@ export default function ListingScreen() {
                                             </Title>
                                         </div>
 
-                                        <div className="rounded-2xl border border-black/10 bg-black/3 px-4 py-3">
+                                        <div className="rounded-2xl border border-black/10 bg-black/3 dark:bg-white/40 glass-card px-4 py-3">
                                             <Text className="mb-1 block text-[11px]! uppercase tracking-[0.22em] text-black/45">
                                                 Watching
                                             </Text>
@@ -216,15 +218,17 @@ export default function ListingScreen() {
                                         </div>
                                     </div>
                                 </div>
+
                             </div>
 
                             <div className="border-t border-black/10 p-5 md:p-6">
                                 <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
                                     <div className="flex w-full flex-col gap-2 sm:flex-row">
                                         <InputNumber
+                                            min={0}
                                             value={myBid}
                                             step={50000}
-                                            placeholder="Enter Offer"
+                                            placeholder="Enter Your Offer"
                                             variant="outlined"
                                             size="large"
                                             className="w-full! sm:max-w-sm"
@@ -233,7 +237,7 @@ export default function ListingScreen() {
                                             onChange={(value) => setMyBid(Number(value || listing.price))}
                                         />
                                         <Button type="primary" size="large" className="rounded-full px-6">
-                                            Make Offer
+                                            Send Offer
                                         </Button>
                                     </div>
 
@@ -245,7 +249,7 @@ export default function ListingScreen() {
                                             variant="outlined"
                                             className="px-5 xl:w-auto"
                                         >
-                                            Notify Me
+                                            Track Listing
                                         </Button>
                                     </div>
                                 </div>
@@ -254,12 +258,8 @@ export default function ListingScreen() {
 
                         <VehicleDetails listing={listing}/>
 
-                        <div className="rounded-2xl border bg-light-accent glass-card dark:bg-dark p-5 md:p-7">
-                            <Title level={4} className="mb-6! ">
-                                Description
-                            </Title>
-                            <VehicleDescription listing={listing}/>
-                        </div>
+
+                        <VehicleDescription listing={listing}/>
 
                         {listing.video.length > 0 && (
                             <div className="rounded-2xl border border-black/10 bg-white p-5 md:p-7 dark:bg-dark">
@@ -308,11 +308,11 @@ export default function ListingScreen() {
                         {listing.seller.name && <DealerComponent dealer={listing.seller} listing={listing}/>}
 
                         {relatedEndingSoon.length > 0 && (
-                            <div className="space-y-4 rounded-2xl border border-black/10 bg-light-accent p-5 md:p-6">
+                            <div className="space-y-4 rounded-2xl p-5 md:p-6">
                                 <Title className="mb-0! text-black" level={4}>
                                     Auctions Ending Soon
                                 </Title>
-                                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-1">
+                                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-2">
                                     {relatedEndingSoon.map((item) => (
                                         <AuctionItem key={item.id} listing={item}/>
                                     ))}

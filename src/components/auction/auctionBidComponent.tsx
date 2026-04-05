@@ -116,7 +116,7 @@ export default function AuctionBidComponent({listing, viewCount}: { listing: Car
         }
     };
 
-    return <div className={'glass-card w-full bg-white dark:bg-dark rounded-lg'}>
+    return <div className={'glass-card w-full bg-light-accent dark:bg-dark rounded-lg'}>
         <div className={'p-8'}>
             <div className={'grid grid-cols-2 lg:grid-cols-3 gap-4'}>
                 <div>
@@ -153,7 +153,7 @@ export default function AuctionBidComponent({listing, viewCount}: { listing: Car
                     <AnimatedTopBidder topBidder={topBidder}/>
                 </div>
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                    <div className="rounded-2xl border border-black/10 bg-black/3 px-4 py-3">
+                    <div className="rounded-2xl border border-black/10 bg-black/3 dark:bg-white/40 glass-card px-4 py-3">
                         <Text className="mb-1 block text-[11px]! uppercase tracking-[0.22em] text-black/45">
                             Seller
                         </Text>
@@ -165,7 +165,7 @@ export default function AuctionBidComponent({listing, viewCount}: { listing: Car
                         </div>
                     </div>
 
-                    <div className="rounded-2xl border border-black/10 bg-black/3 px-4 py-3">
+                    <div className="rounded-2xl border border-black/10 bg-black/3 dark:bg-white/40 glass-card px-4 py-3">
                         <Text className="mb-1 block text-[11px]! uppercase tracking-[0.22em] text-black/45">
                             Ending
                         </Text>
@@ -174,7 +174,7 @@ export default function AuctionBidComponent({listing, viewCount}: { listing: Car
                         </Text>
                     </div>
 
-                    <div className="rounded-2xl border border-black/10 bg-black/3 px-4 py-3">
+                    <div className="rounded-2xl border border-black/10 bg-black/3 dark:bg-white/40 glass-card px-4 py-3">
                         <Text className="mb-1 block text-[11px]! uppercase tracking-[0.22em] text-black/45">
                             Views
                         </Text>
@@ -183,7 +183,7 @@ export default function AuctionBidComponent({listing, viewCount}: { listing: Car
                         </Title>
                     </div>
 
-                    <div className="rounded-2xl border border-black/10 bg-black/3 px-4 py-3">
+                    <div className="rounded-2xl border border-black/10 bg-black/3 dark:bg-white/40 glass-card  px-4 py-3">
                         <Text className="mb-1 block text-[11px]! uppercase tracking-[0.22em] text-black/45">
                             Watching
                         </Text>

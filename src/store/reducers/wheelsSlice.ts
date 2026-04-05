@@ -43,11 +43,7 @@ type HomeCuratedPayload = {
 
 
 const toDealership = (value: unknown): Dealership => keysToCamelCase<Dealership>(value);
-const isAuctionLike = (value: unknown) => {
-    if (!value || typeof value !== "object") return false;
-    const record = value as Record<string, unknown>;
-    return record.type === "auction" || "startingBid" in record || "starting_bid" in record || "current_bid" in record;
-};
+
 
 const uniqueById = <T extends {id: string | number}>(items: T[]) => {
     const seen = new Set<string>();
@@ -99,7 +95,7 @@ export const fetchHomeData = createAsyncThunk<HomeCuratedPayload, void, {rejectV
             ] = await Promise.all([
                 supabase
                     .from("vehicles")
-                    .select("*")
+                    .select("*, seller:dealerships(*), auction:auctions(*), listing:listings(*)")
                     .in("type", ["listing", "auction"])
                     .eq("published", true)
                     .eq("featured", true)
@@ -179,9 +175,31 @@ export const fetchHomeData = createAsyncThunk<HomeCuratedPayload, void, {rejectV
                 .filter(Boolean)
                 .join(" | ");
 
-            const featuredListingsRaw = (featuredResponse.data ?? []).map((item) =>
-                isAuctionLike(item) ? toCarAuction(item) : toCarItem(item)
-            );
+            const  featuredListingsRaw = (featuredResponse.data ?? [])
+                .map((listing) => {
+                    if (!listing) return undefined;
+
+                    if (listing.type === 'auction' && listing.auction) {
+                        return keysToCamelCase<CarAuction>({
+                            ...listing.auction,
+                            ...listing,
+                            auctionId: listing.auction.id,
+                            vehicleId: listing.id
+                        });
+                    }
+
+                    if (listing.type === 'listing' && listing.listing) {
+                        return keysToCamelCase<CarItem>({
+                            ...listing.listing,
+                            ...listing,
+                            listingId: listing.listing.id,
+                            vehicleId: listing.id
+                        });
+                    }
+
+                    return undefined;
+                })
+                .filter((item): item is CarAuction | CarItem => Boolean(item));
             const endingSoonRaw = (endingSoonResponse.data ?? []).map(toCarAuction);
             const newListingsRaw = (newListingsResponse.data ?? []).map((item) => isCarAuction(item) ? toCarAuction(item) : toCarItem(item));
             const popularListingsRaw = (popularListingsResponse.data ?? []).map(toCarItem);

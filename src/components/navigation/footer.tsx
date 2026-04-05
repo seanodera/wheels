@@ -11,7 +11,8 @@ export default function Footer() {
                 {/* Logo Section */}
                 <div>
                     <div className="flex gap-2 items-center">
-                        <Avatar className={'animate-spin duration-[5000]!'} shape="square" size="large" src={<LogoComponent className="text-primary" />} />
+                        <Avatar className="animate-spin duration-1000" shape="square" size="large"
+                                src={<LogoComponent className="text-dark dark:text-white"/>}/>
                         <div>
                             <Title className="leading-none my-0!" level={4}>Wheels</Title>
                             <Text className="text-xs uppercase tracking-[0.22em] text-white/65">

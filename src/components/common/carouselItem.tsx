@@ -9,7 +9,7 @@ const {Title, Text} = Typography;
 
 export default function CarouselItem({featured}: { featured: CarAuction | CarItem }) {
     const [countDown, setCountDown] = useState("");
-
+    console.log(featured);
     const title = `${featured.year} ${featured.brand} ${featured.model}`;
     const specLine = [featured.mileage ? `${featured.mileage.toLocaleString()} KM` : null, featured.engine, featured.transmission]
         .filter(Boolean)
@@ -106,7 +106,7 @@ export default function CarouselItem({featured}: { featured: CarAuction | CarIte
                             ) : (
                                 <div className="max-w-max rounded-xl bg-black/45 px-2.5 py-1.5 backdrop-blur-md">
                                     <Text className="my-0 text-xs font-medium leading-none text-white!">
-                                        KSH {toMoneyFormat(featured.price, true)}
+                                        KSH {toMoneyFormat(featured.price ?? 0, true)}
                                     </Text>
                                 </div>
                             )}
