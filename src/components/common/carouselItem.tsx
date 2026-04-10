@@ -4,12 +4,12 @@ import {HighlightBackground} from "@/components/common.tsx";
 import {ClockCircleOutlined} from "@ant-design/icons";
 import {isCarAuction, toMoneyFormat} from "@/utils";
 import {Typography} from "antd";
+import {Link} from "react-router";
 
 const {Title, Text} = Typography;
 
 export default function CarouselItem({featured}: { featured: CarAuction | CarItem }) {
     const [countDown, setCountDown] = useState("");
-    console.log(featured);
     const title = `${featured.year} ${featured.brand} ${featured.model}`;
     const specLine = [featured.mileage ? `${featured.mileage.toLocaleString()} KM` : null, featured.engine, featured.transmission]
         .filter(Boolean)
@@ -24,6 +24,9 @@ export default function CarouselItem({featured}: { featured: CarAuction | CarIte
         .join(" with ");
     const heroImage = featured.images[0] || "/placeholder.jpg";
     const thumbnails = Array.from({length: 4}, (_, index) => featured.images[index + 1] || heroImage);
+    const secondaryValue = isCarAuction(featured)
+        ? `KSH ${toMoneyFormat(featured.currentBid ?? 0, true)}`
+        : `KSH ${toMoneyFormat(featured.price ?? 0, true)}`;
 
     useEffect(() => {
         if (!("ending" in featured)) {
@@ -63,69 +66,66 @@ export default function CarouselItem({featured}: { featured: CarAuction | CarIte
     }, [featured]);
 
     return (
-        <div className="mb-4">
-            <div className="lg:hidden grid grid-cols-2 grid-rows-3 gap-2">
-                <div className="relative col-span-2 row-span-2 overflow-hidden rounded-2xl">
+        <Link to={`${featured.type === 'auction'? 'auction': 'listing'}/${featured.id}`} className="mb-4">
+            <div className="overflow-hidden rounded-3xl border border-black/10 bg-light-accent shadow-md dark:border-white/10 dark:bg-dark glass-card lg:hidden">
+                <div className="relative">
                     <img
                         src={heroImage}
-                        className="aspect-2.5/1 w-full object-cover"
+                        className="aspect-video w-full object-cover"
                         alt={title}
                     />
 
-                    <div className="absolute inset-0 flex h-full w-full flex-col justify-between bg-linear-to-t from-black/80 via-black/20 to-black/10 p-3">
-                        <div className="flex items-start justify-between gap-2">
-                            <HighlightBackground>Featured</HighlightBackground>
-                            <div className="max-w-[64%] rounded-xl bg-black/30 px-2.5 py-2 backdrop-blur-md">
-                                <Title level={5} className="my-0! text-base! leading-tight text-white!">
-                                    {title}
-                                </Title>
-                                <Text className="my-0! block text-[11px] leading-snug text-white/80!">
-                                    {featured.mileage.toLocaleString()} KM{featured.engine ? ` · ${featured.engine}` : ""}
-                                </Text>
-                            </div>
-                        </div>
-
-                        <div className="flex items-end justify-between gap-2">
-                            {isCarAuction(featured) ? (
-                                <div className="flex max-w-max items-center gap-2 rounded-xl bg-black/45 px-2.5 py-1.5 backdrop-blur-md">
-                                    <span className="flex items-center gap-1">
-                                        <Text className="my-0 text-xs leading-none text-white/75!">
-                                            <ClockCircleOutlined/>
-                                        </Text>
-                                        <Text className="my-0 text-xs font-medium leading-none text-white!">
-                                            {countDown}
-                                        </Text>
-                                    </span>
-                                    <span>
-                                        <Text className="my-0 text-[10px] leading-none text-white/75!">Bid</Text>
-                                        <Text className="my-0 text-xs font-medium leading-none text-white!">
-                                            {" "}KSH {toMoneyFormat(featured.currentBid ?? 0, true)}
-                                        </Text>
-                                    </span>
-                                </div>
-                            ) : (
-                                <div className="max-w-max rounded-xl bg-black/45 px-2.5 py-1.5 backdrop-blur-md">
-                                    <Text className="my-0 text-xs font-medium leading-none text-white!">
-                                        KSH {toMoneyFormat(featured.price ?? 0, true)}
-                                    </Text>
-                                </div>
-                            )}
-                        </div>
+                    <div className="absolute left-3 top-3">
+                        <HighlightBackground>Featured</HighlightBackground>
                     </div>
                 </div>
 
-                {thumbnails.map((img, index) => (
-                    <div
-                        key={`${title}-mobile-${index}`}
-                        className="overflow-hidden rounded-xl"
-                    >
-                        <img
-                            src={img}
-                            alt={`${title} preview ${index + 1}`}
-                            className="aspect-video h-full w-full object-cover"
-                        />
+                <div className="space-y-3 p-3">
+                    <div>
+                        <Title level={5} className="mb-0! leading-tight text-black dark:text-white">
+                            {title}
+                        </Title>
+                        <Text className="mt-1 block text-xs leading-snug text-black/65 dark:text-white/70">
+                            {specLine}
+                        </Text>
                     </div>
-                ))}
+
+                    <div className="flex items-start justify-between gap-3 rounded-2xl border border-black/10 bg-white/60 px-3 py-2.5 dark:border-white/10 dark:bg-white/5">
+                        <div className="min-w-0">
+                            <Text className="block text-[10px]! uppercase tracking-[0.18em] text-black/40 dark:text-white/40">
+                                {isCarAuction(featured) ? "Current Bid" : "Asking Price"}
+                            </Text>
+                            <Text className="block text-sm font-semibold text-black dark:text-white">
+                                {secondaryValue}
+                            </Text>
+                        </div>
+
+                        {isCarAuction(featured) ? (
+                            <div className="min-w-0 text-right">
+                                <Text className="block text-[10px]! uppercase tracking-[0.18em] text-black/40 dark:text-white/40">
+                                    Time Left
+                                </Text>
+                                <div className="flex items-center justify-end gap-1.5">
+                                    <Text className="my-0 text-xs leading-none text-black/55 dark:text-white/55">
+                                        <ClockCircleOutlined/>
+                                    </Text>
+                                    <Text className="text-xs font-medium text-black dark:text-white">
+                                        {countDown}
+                                    </Text>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="shrink-0 text-right">
+                                <Text className="block text-xs font-medium text-black dark:text-white">
+                                    {featured.year}
+                                </Text>
+                                <Text className="block text-[11px] text-black/45 dark:text-white/45">
+                                    {featured.body ?? "Vehicle"}
+                                </Text>
+                            </div>
+                        )}
+                    </div>
+                </div>
             </div>
 
             <div className="hidden overflow-hidden rounded-3xl border border-black/10 bg-light-accent shadow-md dark:border-white/10 dark:bg-dark glass-card lg:block">
@@ -230,6 +230,6 @@ export default function CarouselItem({featured}: { featured: CarAuction | CarIte
                     </div>
                 </div>
             </div>
-        </div>
+        </Link>
     );
 }

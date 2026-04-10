@@ -4,10 +4,18 @@ import {Link, useLocation, useNavigate} from "react-router";
 import {motion} from "framer-motion";
 import LogoComponent from "@/assets/logoComponent.tsx";
 import {useAppDispatch, useAppSelector} from "@/store/hooks.ts";
-import {CloseOutlined, MenuOutlined, MoonOutlined, SearchOutlined, SunOutlined, UserOutlined} from "@ant-design/icons";
+import {
+    CloseOutlined,
+    MenuOutlined,
+    MessageOutlined,
+    MoonOutlined,
+    SearchOutlined, SettingOutlined,
+    SunOutlined,
+    UserOutlined
+} from "@ant-design/icons";
 import {fetchAuctionsAsync, fetchListingAsync, setActiveTab, setQuery, setTheme} from "@/store";
 
-const {Title,Text} = Typography;
+const {Title, Text} = Typography;
 
 const navItems = [
     {to: "/auctions", label: "Auctions", description: "Live bidding and upcoming drops"},
@@ -82,8 +90,9 @@ export default function Navbar() {
                         <Avatar className="animate-spin duration-1000" shape="square" size="large"
                                 src={<LogoComponent className="text-primary"/>}/>
                         <div className="min-w-0">
-                            <Title className="my-0! leading-none" level={4}>Wheels</Title>
-                            <Text className="hidden text-xs uppercase tracking-[0.22em] text-black/45 xl:block dark:text-white/45">
+                            <Title className="my-0! leading-none!" level={4}>Wheels</Title>
+                            <Text
+                                className="text-xs! my-0! leading-none! uppercase tracking-[0.22em] font-logo text-black/45 dark:text-white/45">
                                 By Serid
                             </Text>
                         </div>
@@ -139,17 +148,21 @@ export default function Navbar() {
                                 shape="round"
                                 options={[
                                     {value: "light", icon: <SunOutlined/>},
+                                    {value: 'system', icon: <SettingOutlined/>},
                                     {value: "dark", icon: <MoonOutlined/>},
                                 ]}
                                 value={theme}
                             />
+                            <Link to={'/messages'}><Button type={'text'} icon={<MessageOutlined/>}/></Link>
                             <Tooltip title="Manage saved cars and alerts">
-                                <Link to="/profile" className="flex items-center gap-2 rounded-2xl px-2 py-1 transition-colors hover:bg-slate-100 dark:hover:bg-white/10">
+                                <Link to="/profile"
+                                      className="flex items-center gap-2 rounded-2xl px-2 py-1 transition-colors hover:bg-slate-100 dark:hover:bg-white/10">
                                     <div className="hidden text-right xl:block">
-                                        <Title className="leading-none! my-0!" level={5}>{user.firstName} {user.lastName}</Title>
+                                        <Title className="leading-none! my-0!"
+                                               level={5}>{user.firstName} {user.lastName}</Title>
                                     </div>
-                                <Avatar src={user.profilePicture} icon={!user.profilePicture && <UserOutlined/>}
-                                        size="large" shape="circle"/>
+                                    <Avatar src={user.profilePicture} icon={!user.profilePicture && <UserOutlined/>}
+                                            size="large" shape="circle"/>
                                 </Link>
                             </Tooltip>
                         </div>
@@ -160,6 +173,7 @@ export default function Navbar() {
                                 shape="round"
                                 options={[
                                     {value: "light", icon: <SunOutlined/>},
+                                    {value: 'system', icon: <SettingOutlined/>},
                                     {value: "dark", icon: <MoonOutlined/>},
                                 ]}
                                 value={theme}
@@ -170,7 +184,8 @@ export default function Navbar() {
                     )}
 
                     {/* Mobile Menu Button */}
-                    <Button onClick={() => setIsMenuOpen(true)} icon={<MenuOutlined/>} type={'text'} className="xl:hidden text-2xl"/>
+                    <Button onClick={() => setIsMenuOpen(true)} icon={<MenuOutlined/>} type={'text'}
+                            className="xl:hidden text-2xl"/>
                 </div>
             </div>
 
@@ -254,16 +269,21 @@ export default function Navbar() {
                                     {item.label}
                                 </NavbarItem>
                             ))}
+                            <NavbarItem key={'/messages'} to={'/messages'} description={'Messages'}
+                                        onClick={() => setIsMenuOpen(false)} animated={false}>Messages</NavbarItem>
                         </div>
 
                         {user ? (
                             <Tooltip title="Open profile, saved cars, and alerts">
-                                <Link to="/profile" className="flex gap-3 items-center rounded-2xl bg-slate-100 p-4 dark:bg-white/10" onClick={() => setIsMenuOpen(false)}>
-                                <Avatar src={user.profilePicture} icon={!user.profilePicture && <UserOutlined/>}
-                                        size="large"/>
-                                <div>
-                                    <Title className="leading-none! my-0!" level={5}>{user.firstName} {user.lastName}</Title>
-                                </div>
+                                <Link to="/profile"
+                                      className="flex gap-3 items-center rounded-2xl bg-slate-100 p-4 dark:bg-white/10"
+                                      onClick={() => setIsMenuOpen(false)}>
+                                    <Avatar src={user.profilePicture} icon={!user.profilePicture && <UserOutlined/>}
+                                            size="large"/>
+                                    <div>
+                                        <Title className="leading-none! my-0!"
+                                               level={5}>{user.firstName} {user.lastName}</Title>
+                                    </div>
                                 </Link>
                             </Tooltip>
                         ) : (
@@ -273,9 +293,12 @@ export default function Navbar() {
                                         Sign in for a better experience
                                     </Text>
                                 </Tooltip>
-                                <Link to="/login" onClick={() => setIsMenuOpen(false)}><Button size="large" type="primary"
-                                                          className="w-full">Login</Button></Link>
-                                <Link to="/sign-up" onClick={() => setIsMenuOpen(false)}><Button size="large" type="primary" ghost className="w-full">Sign
+                                <Link to="/login" onClick={() => setIsMenuOpen(false)}><Button size="large"
+                                                                                               type="primary"
+                                                                                               className="w-full">Login</Button></Link>
+                                <Link to="/sign-up" onClick={() => setIsMenuOpen(false)}><Button size="large"
+                                                                                                 type="primary" ghost
+                                                                                                 className="w-full">Sign
                                     up</Button></Link>
                             </div>
                         )}
@@ -292,8 +315,9 @@ export default function Navbar() {
                             onChange={(value) => dispatch(setTheme(value as "light" | "dark"))}
                             shape="round"
                             options={[
-                                { value: "light", icon: <SunOutlined /> },
-                                { value: "dark", icon: <MoonOutlined /> },
+                                {value: "light", icon: <SunOutlined/>},
+                                {value: 'system', icon: <SettingOutlined/>},
+                                {value: "dark", icon: <MoonOutlined/>},
                             ]}
                             value={theme}
                         />
@@ -306,13 +330,13 @@ export default function Navbar() {
 
 /* Navbar Item Component */
 function NavbarItem({
-    to,
-    children,
-    description,
-    currentPath,
-    onClick,
-    animated = false,
-}: {
+                        to,
+                        children,
+                        description,
+                        currentPath,
+                        onClick,
+                        animated = false,
+                    }: {
     to: string,
     children: React.ReactNode,
     description?: string,

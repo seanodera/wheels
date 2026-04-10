@@ -6,7 +6,7 @@ const { Title,Text } = Typography;
 
 export default function Footer() {
     return (
-        <div className=" bg-primary dark:bg-dark pt-16 py-4 px-16">
+        <div className=" bg-primary dark:bg-dark pt-16 py-4 px-4 md:px-6 lg:px-8 xl:px-10">
             <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
                 {/* Logo Section */}
                 <div>
@@ -50,9 +50,9 @@ export default function Footer() {
                 {/* Empty Section for Layout Balance */}
                 <div></div>
             </div>
-            <div className={'flex flex-col-reverse md:grid md:grid-cols-3 py-4 mt-8'}>
+            <div className={'flex flex-col-reverse max-md:items-center md:grid md:grid-cols-3 py-4 mt-8'}>
                 <div className={'leading-none mx-auto my-0!'}></div>
-                <Text className={'leading-none mx-auto my-0! text-center'} type={'secondary'}>&copy; Copyright 2025 Serid · Wheels</Text>
+                <Text className={'leading-none mx-auto my-0! text-center'} type={'secondary'}>&copy; Copyright {new Date().getFullYear()} Serid · Wheels</Text>
                 <div className={'flex flex-col md:flex-row justify-end gap-2'}>
                     <FooterItem to={'/cookies'} className={'text-gray-500 hover:text-primary'} activeClassName={'text-white'}>Cookies
                         Policy</FooterItem>
@@ -69,7 +69,7 @@ export default function Footer() {
 // Reusable Footer Section
 function FooterSection({ title, children }: { title: string, children: React.ReactNode }) {
     return (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col max-md:items-center gap-2">
             <Title level={5}>{title}</Title>
             {children}
         </div>

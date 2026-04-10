@@ -5,7 +5,7 @@ import type {Address} from "@/types";
 
 
 export interface MainState {
-    theme: "light" | "dark";
+    theme: "light" | "dark" | "system";
     collapseSidebar: boolean;
     showAddAddressModal: boolean;
     toBeEditedAddress?: Address;
@@ -17,7 +17,7 @@ const initialState: MainState = {
     collapseSidebar: false,
     showAddPaymentModal: false,
     showAddAddressModal: false,
-    theme: (localStorage.getItem("theme") as "light" | "dark") ?? "light"
+    theme: (localStorage.getItem("theme") as "light" | "dark" | "system") ?? "light"
 
 }
 
@@ -26,7 +26,7 @@ const mainSlice = createSlice({
     name: 'main',
     initialState,
     reducers: {
-        setTheme(state, action: PayloadAction<"light" | "dark">) {
+        setTheme(state, action: PayloadAction<"light" | "dark" | "system">) {
             state.theme = action.payload;
             localStorage.setItem("theme", action.payload);
         },
