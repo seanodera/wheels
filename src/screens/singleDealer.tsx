@@ -61,7 +61,7 @@ export default function SingleDealer() {
                         .maybeSingle(),
                     supabase
                         .from("vehicles")
-                        .select("*,auction:auctions(*), listing:listings(*)")
+                        .select("*, seller:dealerships(*), auction:auctions(*), listing:listings(*)")
                         .eq("published", true)
                         .eq("seller_id", id)
                         .order("created_at", {ascending: false})
@@ -89,17 +89,21 @@ export default function SingleDealer() {
                     .map((listing) => {
                         if (!listing) return undefined;
 
-                        if (listing.type === "auction" && listing.auction) {
+                        if (listing.type === 'auction' && listing.auction) {
                             return keysToCamelCase<CarAuction>({
-                                ...listing,
                                 ...listing.auction,
+                                ...listing,
+                                auctionId: listing.auction.id,
+                                vehicleId: listing.id
                             });
                         }
 
-                        if (listing.type === "listing" && listing.listing) {
+                        if (listing.type === 'listing' && listing.listing) {
                             return keysToCamelCase<CarItem>({
-                                ...listing,
                                 ...listing.listing,
+                                ...listing,
+                                listingId: listing.listing.id,
+                                vehicleId: listing.id
                             });
                         }
 
