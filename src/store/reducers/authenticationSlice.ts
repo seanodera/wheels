@@ -55,11 +55,11 @@ const getCurrentUserId = async () => {
     return response.data.user?.id ?? null;
 };
 
-export const autoLoginUser = createAsyncThunk<Profile, void, {rejectValue: string}>(
+export const autoLoginUser = createAsyncThunk<Profile, {access_token: string | undefined, refresh_token: string | undefined} | undefined, {rejectValue: string}>(
     "authentication/autoLogin",
-    async (_, {rejectWithValue}) => {
+    async (data, {rejectWithValue}) => {
         try {
-            const session = getAuthentication()
+            const session = data ?? getAuthentication()
             if (!session.refresh_token || !session.access_token) {
 
                 return rejectWithValue('no data saved');

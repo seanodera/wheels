@@ -1,12 +1,13 @@
 import {useEffect, useState} from "react";
 import {Alert, Button, Typography} from "antd";
 import {Link, useNavigate, useSearchParams} from "react-router";
-import {supabase} from "@/utils";
 import AuthShell from "@/screens/auth/authShell.tsx";
+import {autoLoginUser, useAppDispatch} from "@/store";
 
 const {Title, Text} = Typography;
 
 export default function AuthCallbackScreen() {
+    const dispatch = useAppDispatch()
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const [error, setError] = useState<string | null>(null);
@@ -29,13 +30,7 @@ export default function AuthCallbackScreen() {
                     throw new Error("Missing authentication tokens.");
                 }
 
-                // ✅ Set session FIRST (required for all email flows)
-                const {error} = await supabase.auth.setSession({
-                    access_token,
-                    refresh_token,
-                });
-
-                if (error) throw error;
+                await dispatch(autoLoginUser({access_token, refresh_token})).unwrap()
 
                 // 🎯 Route based on type
                 switch (type) {
