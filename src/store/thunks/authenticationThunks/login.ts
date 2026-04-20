@@ -48,9 +48,16 @@ export const asyncLoginUser = createAsyncThunk<AuthSuccessPayload, LoginCredenti
             if (credentials.remember){
                 saveAuthentication(data.session.access_token,data.session.refresh_token, data.session.expires_at)
             }
-
+            console.log(authUser)
             return {
-                user: profile,
+                user: {
+                    ...profile,
+                    verification: {
+                        emailVerified: authUser.user_metadata.email_verified,
+                        phoneVerified: authUser.user_metadata.phone_verified,
+                        kycVerified: profile.verification.kycVerified
+                    }
+                },
                 onboardingRequired,
                 redirectTo: onboardingRequired ? "/settings" : "/"
             };

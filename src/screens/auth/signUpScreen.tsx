@@ -1,9 +1,10 @@
 import {Avatar, Form, Typography, Input, Button} from "antd";
-import LogoComponent from "../assets/logoComponent.tsx";
+import LogoComponent from "../../assets/logoComponent.tsx";
 import {Link, useNavigate} from "react-router";
 import {useAppDispatch} from "@/store/hooks.ts";
 import {asyncSignUp} from "@/store/reducers/authenticationSlice.ts";
 import {useState} from "react";
+import {usePostHog} from "@posthog/react";
 
 const {Title, Text} = Typography;
 
@@ -11,11 +12,23 @@ export default function SignUpScreen() {
     const dispatch = useAppDispatch();
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
+    const posthog = usePostHog();
     const onFinish = async (values: { firstName: string; lastName: string; email: string; password: string; }) => {
         setLoading(true);
         console.log('Received values:', values);
-        await dispatch(asyncSignUp(values))
-        navigate('/')
+        const result = await dispatch(asyncSignUp(values))
+        if (asyncSignUp.fulfilled.match(result)) {
+            const profile = result.payload;
+            posthog?.identify(profile.id, {
+                email: values.email,
+                name: `${values.firstName} ${values.lastName}`,
+            });
+            posthog?.capture('user_signed_up', {
+                email: values.email,
+                name: `${values.firstName} ${values.lastName}`,
+            });
+        }
+        navigate(`/verify-email?email=${encodeURIComponent(values.email)}`)
         setLoading(false);
     };
     return <div className={'flex flex-col justify-between items-center px-8 py-2 h-screen w-screen bg-dark-950'}>
@@ -76,7 +89,16 @@ export default function SignUpScreen() {
                 <Form.Item
                     name="confirmPassword"
                     label="Confirm Password"
-                    rules={[{ required: true, message: 'Please confirm your password!' }]}
+                    dependencies={["password"]}
+                    rules={[
+                        { required: true, message: 'Please confirm your password!' },
+                        ({getFieldValue}) => ({
+                            validator(_, value) {
+                                if (!value || getFieldValue("password") === value) return Promise.resolve();
+                                return Promise.reject(new Error("Passwords do not match."));
+                            }
+                        })
+                    ]}
                 >
                     <Input.Password placeholder="Confirm your password" />
                 </Form.Item>

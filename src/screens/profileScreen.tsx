@@ -1,4 +1,4 @@
-import {Avatar, Button, Empty, Tabs, Typography} from "antd";
+import {Avatar, Button, Empty, Tabs, Tag, Typography} from "antd";
 import {useEffect, useMemo, useState, type ReactNode} from "react";
 import {useLocation, useNavigate} from "react-router";
 import {formatDate} from "date-fns";
@@ -17,13 +17,16 @@ import {isCarAuction} from "@/utils";
 
 const {Title, Text} = Typography;
 
-function ProfileField({label, value}: { label: string; value: ReactNode }) {
+function ProfileField({label, value, extra}: { label: string; value: ReactNode, extra?: ReactNode }) {
     return (
         <div className="rounded-2xl border border-black/10 bg-black/3 px-4 py-3">
             <Text className="mb-1 block text-[11px]! uppercase tracking-[0.22em] ">
                 {label}
             </Text>
-            <Text className="block text-black">{value}</Text>
+            <div className={'flex gap-2'}>
+                <Text className="block text-black">{value}</Text>
+                {extra}
+            </div>
         </div>
     );
 }
@@ -108,8 +111,9 @@ export default function ProfileScreen() {
                                 <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
                                     <ProfileField label="First Name" value={user.firstName}/>
                                     <ProfileField label="Last Name" value={user.lastName}/>
-                                    <ProfileField label="Email" value={user.email}/>
-                                    <ProfileField label="Phone" value={user.phone || "-"} />
+                                    <ProfileField label="Email" value={user.email} extra={<Tag
+                                        color={user.verification.emailVerified ? 'success' : 'warning'}>{user.verification.emailVerified ? 'verified' : 'unVerified'}</Tag>}/>
+                                    <ProfileField label="Phone" value={user.phone || "-"}/>
                                 </div>
                             </div>
                         </div>

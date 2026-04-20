@@ -1,9 +1,9 @@
 import {useParams} from "react-router";
 import {useEffect, useRef, useState} from "react";
-import {Button, Empty, Typography} from "antd";
+import {App, Button, Empty, Typography} from "antd";
 import {SendOutlined, StarOutlined} from "@ant-design/icons";
 import AuctionItem from "@/components/auction/auctionItem.tsx";
-import {trackVehicleView} from "@/utils";
+import {trackVehicleView, watchAuction} from "@/utils";
 import {useAppDispatch, useAppSelector} from "@/store/hooks.ts";
 import {fetchAuctionsAsync, setCurrentAuctionAsync} from "@/store/reducers/auctionSlice.ts";
 import LoadingScreen from "@/components/navigation/loadingScreen.tsx";
@@ -12,11 +12,13 @@ import {DealerComponent} from "@/components/dealer/dealerComponent.tsx";
 import ImageSection from "@/components/common/imageSection.tsx";
 import {VehicleDetails} from "@/components/common/vehicleDetails.tsx";
 import {VehicleDescription} from "@/components/common/vehicleDescription.tsx";
+import {usePostHog} from "@posthog/react";
 
 const {Title, Text} = Typography;
 
 
 export default function AuctionScreen() {
+    const {message} = App.useApp();
     const {id} = useParams<{ id: string }>();
     const dispatch = useAppDispatch();
     const {
@@ -28,9 +30,12 @@ export default function AuctionScreen() {
         auctionsFetched
     } = useAppSelector((state) => state.auction);
     const [viewCount, setViewCount] = useState<number>(0);
+    const [watchCount, setWatchCount] = useState<number>(0);
+    const [watching, setWatching] = useState(false);
     const userId = useAppSelector((state) => state.authentication.user?.id ?? null);
     const trackedVehicleId = useRef<string | null>(null);
     const listing = currentAuction;
+    const posthog = usePostHog();
 
     useEffect(() => {
         if (!id || currentAuction && currentAuction.id === id) return;
@@ -42,6 +47,7 @@ export default function AuctionScreen() {
 
     useEffect(() => {
         setViewCount(Number(listing?.views ?? 0));
+        setWatchCount(Number(listing?.watchCount ?? 0));
     }, [listing?.id, listing?.views]);
 
     useEffect(() => {
@@ -52,13 +58,26 @@ export default function AuctionScreen() {
         void trackVehicleView({
             vehicleId: String(listing.id),
             dealerId: String(listing.sellerId),
-            userId
+            userId,
+            posthogDistinctId: posthog?.get_distinct_id() ?? null,
+            eventName: "auction_viewed",
+            eventProperties: {
+                auction_id: listing.id,
+                vehicle_id: listing.id,
+                vehicle: `${listing.year} ${listing.brand} ${listing.model}`,
+                brand: listing.brand,
+                model: listing.model,
+                year: listing.year,
+                current_bid: listing.currentBid,
+                dealer: listing.seller?.name
+            },
+            capture: posthog?.capture.bind(posthog)
         }).then((nextViews) => {
             if (typeof nextViews === "number") {
                 setViewCount(nextViews);
             }
         });
-    }, [listing?.id, listing?.sellerId, userId]);
+    }, [listing, posthog, userId]);
 
     if (currentAuctionLoading) {
         return <LoadingScreen/>;
@@ -67,6 +86,48 @@ export default function AuctionScreen() {
     if (!id || !listing) {
         return <Empty description={error || "Invalid auction item"}/>;
     }
+
+    const listingWithWatchCount = {
+        ...listing,
+        watchCount
+    };
+
+    const handleWatchAuction = async () => {
+        if (!userId) {
+            message.error("Log in to watch this auction");
+            return;
+        }
+
+        if (watching) return;
+
+        setWatching(true);
+        const result = await watchAuction({
+            auctionId: String(listing.auctionId),
+            vehicleId: String(listing.id),
+            dealerId: String(listing.sellerId),
+            eventProperties: {
+                auction_id: listing.auctionId,
+                vehicle_id: listing.id,
+                vehicle: `${listing.year} ${listing.brand} ${listing.model}`,
+                brand: listing.brand,
+                model: listing.model,
+                year: listing.year,
+                current_bid: listing.currentBid,
+                dealer: listing.seller?.name
+            },
+            capture: posthog?.capture.bind(posthog)
+        });
+
+        setWatching(false);
+
+        if (!result) {
+            message.error("Unable to watch this auction");
+            return;
+        }
+
+        setWatchCount(result.watchCount);
+        message.success(result.inserted ? "Auction watch added" : "You are already watching this auction");
+    };
 
 
     return (
@@ -92,6 +153,8 @@ export default function AuctionScreen() {
                             color={'default'}
                             variant={'outlined'}
                             className="h-11 rounded-full border-black/15 bg-white/70 px-5"
+                            loading={watching}
+                            onClick={handleWatchAuction}
                         >
                             Watch
                         </Button>
@@ -101,6 +164,7 @@ export default function AuctionScreen() {
                             color={'default'}
                             variant={'outlined'}
                             className="h-11 rounded-full border-black/15 bg-white/70 px-5"
+                            onClick={() => posthog?.capture('auction_shared', {auction_id: listing.id, vehicle: `${listing.year} ${listing.brand} ${listing.model}`})}
                         >
                             Share
                         </Button>
@@ -111,11 +175,11 @@ export default function AuctionScreen() {
 
                 <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.5fr)_380px] 2xl:gap-12 2xl:grid-cols-6">
                     <div className="order-1 space-y-6 2xl:space-y-12 2xl:col-span-4 xl:sticky xl:top-6 xl:self-start">
-                        <AuctionBidComponent listing={listing} viewCount={viewCount}/>
+                        <AuctionBidComponent listing={listingWithWatchCount} viewCount={viewCount}/>
 
-                        <VehicleDetails listing={listing}/>
+                        <VehicleDetails listing={listingWithWatchCount}/>
 
-                        <VehicleDescription listing={listing}/>
+                        <VehicleDescription listing={listingWithWatchCount}/>
 
                         {listing.video.length > 0 && (
                             <div className="rounded-2xl border border-black/10 bg-white p-5 md:p-7">
@@ -135,6 +199,9 @@ export default function AuctionScreen() {
                             </div>
                         )}
 
+                        <div className={'block lg:hidden'}>{listing.seller.name && <DealerComponent dealer={listing.seller} listing={listingWithWatchCount}/>}
+                        </div>
+
                         {relatedNewlyListed.length > 0 && (
                             <div className="space-y-4">
                                 <Title className="mb-0! text-black" level={4}>
@@ -150,14 +217,14 @@ export default function AuctionScreen() {
                     </div>
 
                     <aside className="order-2 space-y-6 2xl:col-span-2  xl:sticky xl:top-6 xl:self-start">
-                        {listing.seller.name && <DealerComponent dealer={listing.seller} listing={listing}/>}
-
+                        <div className={'hidden lg:block'}>{listing.seller.name && <DealerComponent dealer={listing.seller} listing={listingWithWatchCount}/>}
+                        </div>
                         {relatedEndingSoon.length > 0 && (
-                            <div className="space-y-4 rounded-2xl border border-black/10 bg-light-accent p-5 md:p-6">
+                            <div className="space-y-4">
                                 <Title className="mb-0! text-black" level={4}>
                                     Ending Soon
                                 </Title>
-                                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-1">
+                                <div className="grid gap-5 grid-cols-1 sm:grid-cols-2">
                                     {relatedEndingSoon.map((auction) => (
                                         <AuctionItem key={auction.id} listing={auction}/>
                                     ))}

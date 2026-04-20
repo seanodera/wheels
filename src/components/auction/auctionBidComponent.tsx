@@ -12,6 +12,7 @@ import {formatDate, formatDistanceToNow} from "date-fns";
 import {useEffect, useRef, useState} from "react";
 import {fetchTopBidder, makeBidAsync, refreshAuctionAsync, useAppDispatch, useAppSelector} from "@/store";
 import {animate, motion} from "framer-motion";
+import {usePostHog} from "@posthog/react";
 
 const {Title, Text} = Typography
 export default function AuctionBidComponent({listing, viewCount}: { listing: CarAuction; viewCount?: number }) {
@@ -24,6 +25,7 @@ export default function AuctionBidComponent({listing, viewCount}: { listing: Car
     const [hasEnded, setHasEnded] = useState(false);
     const pendingBidRef = useRef<number | null>(null);
 
+    const posthog = usePostHog();
     const currentBid = Number(listing.currentBid) || 0;
     const topBidder = listing.bids?.[0];
 
@@ -109,9 +111,21 @@ export default function AuctionBidComponent({listing, viewCount}: { listing: Car
 
         try {
             await dispatch(makeBidAsync(myBid)).unwrap();
+            posthog?.capture('auction_bid_placed', {
+                auction_id: listing.id,
+                vehicle: `${listing.year} ${listing.brand} ${listing.model}`,
+                bid_amount: myBid,
+                previous_bid: currentBid,
+            });
             void message.success(`Bid placed at KSH ${toMoneyFormat(myBid)}`);
         } catch (error) {
             pendingBidRef.current = null;
+            posthog?.capture('auction_bid_failed', {
+                auction_id: listing.id,
+                vehicle: `${listing.year} ${listing.brand} ${listing.model}`,
+                bid_amount: myBid,
+                error_message: error instanceof Error ? error.message : String(error),
+            });
             void message.error(error instanceof Error ? error.message : String(error));
         }
     };

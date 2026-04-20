@@ -3,8 +3,15 @@ import './App.css'
 import {App as AntApp, ConfigProvider} from "antd";
 import MainShell from "./shells/mainShell.tsx";
 import HomeScreen from "./screens/homeScreen.tsx";
-import LoginScreen from "./screens/loginScreen.tsx";
-import SignUpScreen from "./screens/signUpScreen.tsx";
+import LoginScreen from "./screens/auth/loginScreen.tsx";
+import SignUpScreen from "./screens/auth/signUpScreen.tsx";
+import AuthCallbackScreen from "@/screens/auth/authCallbackScreen.tsx";
+import ChangeEmailScreen from "@/screens/auth/changeEmailScreen.tsx";
+import ForgotPasswordScreen from "@/screens/auth/forgotPasswordScreen.tsx";
+import MagicLinkScreen from "@/screens/auth/magicLinkScreen.tsx";
+import ReauthenticationScreen from "@/screens/auth/reauthenticationScreen.tsx";
+import ResetPasswordScreen from "@/screens/auth/resetPasswordScreen.tsx";
+import VerifyEmailScreen from "@/screens/auth/verifyEmailScreen.tsx";
 import AuctionScreen from "@/screens/auctionScreen.tsx";
 import DealerScreen from "@/screens/dealerScreen.tsx";
 import SingleDealer from "@/screens/singleDealer.tsx";
@@ -60,6 +67,13 @@ function App() {
                                 </Route>
                                 <Route path={'/login'} element={<LoginScreen/>}/>
                                 <Route path={'/sign-up'} element={<SignUpScreen/>}/>
+                                <Route path={'/auth/callback'} element={<AuthCallbackScreen/>}/>
+                                <Route path={'/verify-email'} element={<VerifyEmailScreen/>}/>
+                                <Route path={'/forgot-password'} element={<ForgotPasswordScreen/>}/>
+                                <Route path={'/reset-password'} element={<ResetPasswordScreen/>}/>
+                                <Route path={'/magic-link'} element={<MagicLinkScreen/>}/>
+                                <Route path={'/change-email'} element={<ChangeEmailScreen/>}/>
+                                <Route path={'/reauthenticate'} element={<ReauthenticationScreen/>}/>
                             </Routes>
                         </div>
                     </AntApp>

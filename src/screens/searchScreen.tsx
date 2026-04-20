@@ -17,12 +17,14 @@ import {
     setTransmissionFilter,
     syncSearchInventory
 } from "@/store/reducers/searchSlice.ts";
+import {usePostHog} from "@posthog/react";
 
 const {Search} = Input;
 const {Title, Text} = Typography;
 
 export default function SearchScreen() {
     const dispatch = useAppDispatch();
+    const posthog = usePostHog();
     const {auctions, loading: auctionsLoading, error: auctionsError, auctionsFetched} = useAppSelector((state) => state.auction);
     const {listings, loading: listingsLoading, error: listingsError, fetchedPages} = useAppSelector((state) => state.listing);
     const {
@@ -85,6 +87,15 @@ export default function SearchScreen() {
                             allowClear
                             value={query}
                             onChange={(event) => dispatch(setQuery(event.target.value))}
+                            onSearch={(value) => {
+                                if (value.trim()) {
+                                    posthog?.capture('search_performed', {
+                                        query: value,
+                                        results_count: filteredResults.length,
+                                        active_tab: activeTab,
+                                    });
+                                }
+                            }}
                             placeholder="Search by brand, model, body, engine or tags"
                             size="large"
                             className="search-screen-input"

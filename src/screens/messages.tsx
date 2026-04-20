@@ -4,6 +4,7 @@ import {ArrowLeftOutlined, SendOutlined} from "@ant-design/icons";
 import {clearCurrentConversation, fetchConversationsAsync, markConversationRead, sendMessageAsync, setCurrentConversation, useAppDispatch, useAppSelector} from "@/store";
 import type {Conversation} from "@/types";
 import {formatDate} from "date-fns";
+import {usePostHog} from "@posthog/react";
 
 const {Title, Text} = Typography;
 const {useBreakpoint} = Grid;
@@ -22,6 +23,7 @@ function getDealerParticipant(conversation: Conversation) {
 
 export default function MessagesScreen() {
     const dispatch = useAppDispatch();
+    const posthog = usePostHog();
     const loadMoreRef = useRef<HTMLDivElement | null>(null);
     const messagesEndRef = useRef<HTMLDivElement | null>(null);
     const screens = useBreakpoint();
@@ -89,6 +91,10 @@ export default function MessagesScreen() {
             conversationId: currentConversation.id,
             content: draftMessage
         }));
+        posthog?.capture('message_sent', {
+            conversation_id: currentConversation.id,
+            vehicle_title: currentConversation.vehicleTitle ?? currentConversation.subject,
+        });
         setDraftMessage("");
     };
 

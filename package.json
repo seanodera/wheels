@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@ant-design/icons": "6",
+    "@posthog/react": "^1.9.0",
     "@reduxjs/toolkit": "^2.9.0",
     "@supabase/supabase-js": "^2.99.2",
     "@tailwindcss/vite": "^4.1.14",
@@ -23,6 +24,7 @@
     "js-cookie": "^3.0.5",
     "lodash": "^4.17.21",
     "nanoid": "^5.1.7",
+    "posthog-js": "^1.369.3",
     "react": "^19.0.0",
     "react-big-calendar": "^1.19.4",
     "react-dom": "^19.1.1",

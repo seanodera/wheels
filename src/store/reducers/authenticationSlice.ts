@@ -72,6 +72,7 @@ export const autoLoginUser = createAsyncThunk<Profile, void, {rejectValue: strin
                 return rejectWithValue(sessionResponse.error.message);
             }
 
+
             const userId = sessionResponse.data.session?.user?.id;
             if (!userId) {
                 return rejectWithValue("No active session");
@@ -82,7 +83,14 @@ export const autoLoginUser = createAsyncThunk<Profile, void, {rejectValue: strin
                 return rejectWithValue("Profile not found");
             }
 
-            return profile;
+            return {
+                ...profile,
+                verification: {
+                    emailVerified: sessionResponse.data.user?.user_metadata.email_verified ?? false,
+                    phoneVerified: sessionResponse.data.user?.user_metadata.phone_verified ?? false,
+                    kycVerified: profile.verification.kycVerified
+                }
+            };
         } catch (error) {
             return rejectWithValue(error instanceof Error ? error.message : "Failed to auto-login");
         }

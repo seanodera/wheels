@@ -4,79 +4,76 @@ type TrackVehicleViewArgs = {
     vehicleId: string;
     dealerId: string;
     userId?: string | null;
+    posthogDistinctId?: string | null;
+    eventName: string;
+    eventProperties: Record<string, unknown>;
+    capture?: (eventName: string, properties: Record<string, unknown>) => void;
 };
 
-export const trackVehicleView = async ({vehicleId, dealerId, userId}: TrackVehicleViewArgs): Promise<number | null> => {
+type RecordVehicleViewResult = {
+    inserted?: boolean;
+    views?: number;
+};
+
+export const trackVehicleView = async ({
+    vehicleId,
+    dealerId,
+    userId,
+    posthogDistinctId,
+    eventName,
+    eventProperties,
+    capture
+}: TrackVehicleViewArgs): Promise<number | null> => {
     try {
-        const payload: {
-            vehicle_id: string;
-            dealer_id: string;
-            event_type: "view";
-            user_id?: string;
-        } = {
-            vehicle_id: vehicleId,
-            dealer_id: dealerId,
-            event_type: "view"
-        };
+        console.log("[trackVehicleView] start", {
+            vehicleId,
+            dealerId,
+            userId,
+            posthogDistinctId,
+            eventName,
+            eventProperties
+        });
 
-        if (userId) {
-            payload.user_id = userId;
-        }
+        const {data, error} = await supabase.rpc("record_vehicle_view", {
+            p_vehicle_id: vehicleId,
+            p_dealer_id: dealerId,
+            p_user_id: userId,
+            p_posthog_distinct_id: posthogDistinctId,
+            p_metadata: eventProperties
+        });
 
-        const {error: eventInsertError} = await supabase
-            .from("vehicle_events")
-            .insert(payload);
+        console.log("[trackVehicleView] rpc response", {data, error});
 
-        if (eventInsertError) {
-            console.error("Failed to insert vehicle view event", eventInsertError);
-        }
-
-        for (let attempt = 0; attempt < 3; attempt += 1) {
-            const {data: vehicle, error: vehicleFetchError} = await supabase
-                .from("vehicles")
-                .select("views")
-                .eq("id", vehicleId)
-                .maybeSingle();
-
-            if (vehicleFetchError) {
-                console.error("Failed to fetch vehicle views", vehicleFetchError);
-                return null;
-            }
-
-            const currentViews = Number(vehicle?.views ?? 0);
-            const nextViews = currentViews + 1;
-
-            const {data: updatedVehicles, error: vehicleUpdateError} = await supabase
-                .from("vehicles")
-                .update({views: nextViews})
-                .eq("id", vehicleId)
-                .eq("views", currentViews)
-                .select("views")
-                .returns<{views: number}[]>();
-
-            if (vehicleUpdateError) {
-                console.error("Failed to update vehicle views", vehicleUpdateError);
-                return null;
-            }
-
-            const updatedVehicle = updatedVehicles?.[0];
-            if (updatedVehicle) {
-                return Number(updatedVehicle.views ?? nextViews);
-            }
-        }
-
-        const {data: latestVehicle, error: latestVehicleError} = await supabase
-            .from("vehicles")
-            .select("views")
-            .eq("id", vehicleId)
-            .maybeSingle();
-
-        if (latestVehicleError) {
-            console.error("Failed to read latest vehicle views", latestVehicleError);
+        if (error) {
+            console.error("Failed to record vehicle view", error);
             return null;
         }
 
-        return Number(latestVehicle?.views ?? 0);
+        const result = data as RecordVehicleViewResult | null;
+
+        if (result?.inserted) {
+            console.log("[trackVehicleView] unique view inserted, capturing PostHog event", {
+                eventName,
+                views: result.views
+            });
+
+            capture?.(eventName, {
+                ...eventProperties,
+                posthog_distinct_id: posthogDistinctId,
+                unique_view: true
+            });
+        } else {
+            console.log("[trackVehicleView] duplicate view ignored; Supabase returned current unique view count", {
+                vehicleId,
+                userId,
+                posthogDistinctId,
+                views: result?.views
+            });
+        }
+
+        const views = typeof result?.views === "number" ? result.views : null;
+        console.log("[trackVehicleView] complete", {views});
+        return views;
     } catch (error) {
         console.error("Failed to track vehicle view", error);
         return null;

@@ -22,6 +22,7 @@ import {DealerComponent} from "@/components/dealer/dealerComponent.tsx";
 import ImageSection from "@/components/common/imageSection.tsx";
 import {VehicleDescription} from "@/components/common/vehicleDescription.tsx";
 import {VehicleDetails} from "@/components/common/vehicleDetails.tsx";
+import {usePostHog} from "@posthog/react";
 
 const {Title, Text} = Typography;
 
@@ -40,6 +41,7 @@ export default function ListingScreen() {
     const userId = useAppSelector((state) => state.authentication.user?.id ?? null);
     const trackedVehicleId = useRef<string | null>(null);
     const listing: CarItem | undefined = currentListing;
+    const posthog = usePostHog();
 
     useEffect(() => {
         if (!id) {
@@ -74,13 +76,27 @@ export default function ListingScreen() {
         void trackVehicleView({
             vehicleId: String(listing.id),
             dealerId: String(listing.sellerId),
-            userId
+            userId,
+            posthogDistinctId: posthog?.get_distinct_id() ?? null,
+            eventName: "listing_viewed",
+            eventProperties: {
+                listing_id: listing.id,
+                vehicle_id: listing.id,
+                vehicle: `${listing.year} ${listing.brand} ${listing.model}`,
+                brand: listing.brand,
+                model: listing.model,
+                year: listing.year,
+                price: listing.price,
+                negotiable: listing.negotiable,
+                dealer: listing.seller?.name
+            },
+            capture: posthog?.capture.bind(posthog)
         }).then((nextViews) => {
             if (typeof nextViews === "number") {
                 setViewCount(nextViews);
             }
         });
-    }, [listing?.id, listing?.sellerId, userId]);
+    }, [listing, posthog, userId]);
 
     useEffect(() => {
         dispatch(setRelatedAuctionReferenceId(listing?.id ? String(listing.id) : null));
@@ -116,6 +132,7 @@ export default function ListingScreen() {
                             color="default"
                             variant="outlined"
                             className="h-11 rounded-full border-black/15 bg-white/70 px-5"
+                            onClick={() => posthog?.capture('listing_watched', {listing_id: listing.id, vehicle: `${listing.year} ${listing.brand} ${listing.model}`})}
                         >
                             Watch
                         </Button>
@@ -236,7 +253,17 @@ export default function ListingScreen() {
                                             formatter={(value) => toMoneyFormat(Number(value || 0))}
                                             onChange={(value) => setMyBid(Number(value || listing.price))}
                                         />
-                                        <Button type="primary" size="large" className="rounded-full px-6">
+                                        <Button
+                                            type="primary"
+                                            size="large"
+                                            className="rounded-full px-6"
+                                            onClick={() => posthog?.capture('listing_offer_sent', {
+                                                listing_id: listing.id,
+                                                vehicle: `${listing.year} ${listing.brand} ${listing.model}`,
+                                                offer_amount: myBid,
+                                                asking_price: listing.price,
+                                            })}
+                                        >
                                             Send Offer
                                         </Button>
                                     </div>

@@ -1,8 +1,9 @@
 import {App, Avatar, Button, Checkbox, Flex, Form, Input, Typography} from "antd";
-import LogoComponent from "../assets/logoComponent.tsx";
+import LogoComponent from "../../assets/logoComponent.tsx";
 import {Link, useNavigate} from "react-router";
 import {asyncLoginUser, useAppDispatch, useAppSelector} from "@/store";
 import LoadingScreen from "@/components/navigation/loadingScreen.tsx";
+import {usePostHog} from "@posthog/react";
 
 const {Title,Text} = Typography;
 
@@ -11,6 +12,7 @@ export default function LoginScreen() {
     const navigate = useNavigate();
     const {loading} = useAppSelector(state => state.authentication);
     const dispatch = useAppDispatch();
+    const posthog = usePostHog();
     const onFinish = async (values: {email: string,password: string, remember?: boolean}) => {
         const res = await dispatch(asyncLoginUser(values)).unwrap()
         if (res.onboardingRequired){
@@ -18,6 +20,11 @@ export default function LoginScreen() {
             navigate(res.redirectTo)
             return;
         }
+        posthog?.identify(res.user.id, {
+            email: values.email,
+            name: `${res.user.firstName} ${res.user.lastName}`,
+        });
+        posthog?.capture('user_logged_in', {email: values.email});
         message.success('User authenticated successfully.')
         if (res.redirectTo === '/'){
             try {
@@ -76,7 +83,7 @@ export default function LoginScreen() {
                     <Form.Item name="remember" valuePropName="checked" noStyle>
                         <Checkbox>Remember me</Checkbox>
                     </Form.Item>
-                    <Button className={'hover:underline'} color={'primary'} variant={'link'} type={'primary'}>Forgot your password?</Button>
+                    <Link className="text-primary hover:underline" to="/forgot-password">Forgot your password?</Link>
                 </Flex>
                 <Form.Item>
                     <Button type="primary" htmlType="submit" className="w-full" size={'large'}>
@@ -85,6 +92,9 @@ export default function LoginScreen() {
                 </Form.Item>
                 <Form.Item className={'flex justify-center text-center'}>
                     <Text className={'text-center'}>New To Wheela? <Link className={'text-primary hover:underline'} to={'/sign-up'}>Create an account</Link></Text>
+                </Form.Item>
+                <Form.Item className="flex justify-center text-center">
+                    <Text><Link className="text-primary hover:underline" to="/magic-link">Email me a magic link</Link></Text>
                 </Form.Item>
             </Form>
         </div>
