@@ -1,16 +1,28 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/store";
-import { setTheme} from "@/store";
+import { setTheme } from "@/store";
 
-const getSystemTheme = () => window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-const getStoredThemePreference = (): "light" | "system" | "dark" | null => {
+type ThemeMode = "light" | "dark" | "system";
+type ResolvedTheme = "light" | "dark";
+
+const getSystemTheme = (): ResolvedTheme => {
+  return window.matchMedia("(prefers-color-scheme: dark)").matches
+      ? "dark"
+      : "light";
+};
+
+const getStoredThemePreference = (): ThemeMode | null => {
   const savedTheme = localStorage.getItem("theme");
-  return savedTheme === "light" || savedTheme === "system" || savedTheme === "dark" ? savedTheme : null;
+  return savedTheme === "light" || savedTheme === "system" || savedTheme === "dark"
+      ? savedTheme
+      : null;
 };
 
 export function useThemeManager() {
   const dispatch = useAppDispatch();
   const { theme } = useAppSelector((state) => state.main);
+
+  const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>(getSystemTheme());
 
   useEffect(() => {
     const savedTheme = getStoredThemePreference();
@@ -29,21 +41,25 @@ export function useThemeManager() {
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+
     const applyTheme = () => {
-      const resolvedTheme = theme === "system" ? getSystemTheme() : theme;
-      document.documentElement.classList.toggle("dark", resolvedTheme === "dark");
-      document.documentElement.setAttribute("data-theme", resolvedTheme);
+      const resolved: ResolvedTheme =
+          theme === "system" ? getSystemTheme() : theme;
+
+      setResolvedTheme(resolved);
+      document.documentElement.classList.toggle("dark", resolved === "dark");
+      document.documentElement.setAttribute("data-theme", resolved);
     };
 
     applyTheme();
-    if (theme !== "system") {
-      return;
-    }
+
+    if (theme !== "system") return;
 
     const handleChange = () => applyTheme();
+
     mediaQuery.addEventListener("change", handleChange);
     return () => mediaQuery.removeEventListener("change", handleChange);
   }, [theme]);
 
-  return theme === "system" ? getSystemTheme() : theme;
+  return resolvedTheme;
 }
