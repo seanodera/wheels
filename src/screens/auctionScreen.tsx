@@ -126,6 +126,13 @@ export default function AuctionScreen() {
         }
 
         setWatchCount(result.watchCount);
+        posthog.capture('auction_watched', {
+            brand: listing.brand,
+            model: listing.model,
+            year: String(listing.year),
+            vehicleId: String(listing.id),
+            type: listing.type,
+        })
         message.success(result.inserted ? "Auction watch added" : "You are already watching this auction");
     };
 

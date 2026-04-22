@@ -50,13 +50,11 @@ export const trackVehicleView = async ({
         }
 
         const result = data as RecordVehicleViewResult | null;
-
         if (result?.inserted) {
             console.log("[trackVehicleView] unique view inserted, capturing PostHog event", {
                 eventName,
                 views: result.views
             });
-
             capture?.(eventName, {
                 ...eventProperties,
                 posthog_distinct_id: posthogDistinctId,
@@ -68,6 +66,11 @@ export const trackVehicleView = async ({
                 userId,
                 posthogDistinctId,
                 views: result?.views
+            });
+            capture?.(eventName, {
+                ...eventProperties,
+                posthog_distinct_id: posthogDistinctId,
+                unique_view: false
             });
         }
 

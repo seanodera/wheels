@@ -47,13 +47,16 @@ export const watchAuction = async ({
         const inserted = Boolean(result?.inserted);
 
         if (inserted) {
-            console.log("[watchAuction] watch inserted, capturing PostHog event", {watchCount});
             capture?.("auction_watched", {
                 ...eventProperties,
                 unique_watch: true
             });
         } else {
             console.log("[watchAuction] duplicate watch ignored", {watchCount});
+            capture?.("auction_watched", {
+                ...eventProperties,
+                unique_watch: true
+            });
         }
 
         return {inserted, watchCount};

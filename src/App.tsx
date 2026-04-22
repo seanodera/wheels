@@ -27,6 +27,10 @@ import LoadingScreen from "@/components/navigation/loadingScreen.tsx";
 import MessagesScreen from "@/screens/messages.tsx";
 import useGlassTheme from "@/glassTheme.ts";
 import SearchScreen from "@/screens/searchScreen.tsx";
+import SellWithUs from "@/screens/sellWithUs.tsx";
+import PricingPage from "@/screens/pricing.tsx";
+import AboutPage from "@/screens/about.tsx";
+import ContactPage from "@/screens/contactScreen.tsx";
 
 function App() {
     const currentTheme = useThemeManager();
@@ -65,6 +69,10 @@ function App() {
                                     <Route path={'/listing/:id'} element={<ListingScreen/>}/>
                                     <Route path={'/profile'} element={<ProfileScreen/>}/>
                                 </Route>
+                                <Route path={'/contact'} element={<ContactPage/>}/>
+                                <Route path={'/about'} element={<AboutPage/>}/>
+                                <Route path={'/pricing'} element={<PricingPage/>}/>
+                                <Route path={'/sell-with-us'} element={<SellWithUs/>}/>
                                 <Route path={'/login'} element={<LoginScreen/>}/>
                                 <Route path={'/sign-up'} element={<SignUpScreen/>}/>
                                 <Route path={'/auth/callback'} element={<AuthCallbackScreen/>}/>

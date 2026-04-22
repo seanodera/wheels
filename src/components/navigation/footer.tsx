@@ -6,7 +6,7 @@ const { Title,Text } = Typography;
 
 export default function Footer() {
     return (
-        <div className=" bg-primary dark:bg-dark pt-16 py-4 px-4 md:px-6 lg:px-8 xl:px-10">
+        <div className=" bg-primary dark:bg-dark pt-20 md:pt-24 xl:pt-28 2xl:pt-36 px-4 md:px-8 xl:px-12 2xl:px-16 flex flex-col justify-end min-h-[30vh]">
             <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
                 {/* Logo Section */}
                 <div>
@@ -26,27 +26,25 @@ export default function Footer() {
                 </div>
 
 
-                {/* How It Works */}
-                <FooterSection title="How It Works">
-                    <FooterItem to="/buyers">Buyers</FooterItem>
-                    <FooterItem to="/sellers">Sellers</FooterItem>
+                {/* SELLING */}
+                <FooterSection title="Selling">
+                    <FooterItem to="/sell-with-us">Sell a Car</FooterItem>
+                    <FooterItem to="/pricing">Fees & Pricing</FooterItem>
+                    <FooterItem to="/auctions">Browse Auctions</FooterItem>
+                </FooterSection>
+
+                {/* MARKETPLACE */}
+                <FooterSection title="Marketplace">
                     <FooterItem to="/auctions">Auctions</FooterItem>
+                    <FooterItem to="/listings">Listings</FooterItem>
+                    <FooterItem to="/search">Search</FooterItem>
                 </FooterSection>
 
-                {/* Sellers */}
-                <FooterSection title="Sellers">
-                    <FooterItem to="/sell">Sell a Car</FooterItem>
-                    <FooterItem to="/dealer">Dealer Services</FooterItem>
-                    <FooterItem to="/pricing">Pricing</FooterItem>
-                </FooterSection>
-
-                {/* Company */}
+                {/* COMPANY */}
                 <FooterSection title="Wheels">
-                    <FooterItem to="/about">About Us</FooterItem>
+                    <FooterItem to="/about">About</FooterItem>
                     <FooterItem to="/contact">Contact</FooterItem>
-                    <FooterItem to="/faq">FAQ</FooterItem>
                 </FooterSection>
-
                 {/* Empty Section for Layout Balance */}
                 <div></div>
             </div>
@@ -69,7 +67,7 @@ export default function Footer() {
 // Reusable Footer Section
 function FooterSection({ title, children }: { title: string, children: React.ReactNode }) {
     return (
-        <div className="flex flex-col max-md:items-center gap-2">
+        <div className="flex flex-col max-md:items-center gap-4">
             <Title level={5}>{title}</Title>
             {children}
         </div>
